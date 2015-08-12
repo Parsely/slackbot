@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 import requests
 from config import *
@@ -9,8 +10,12 @@ payload = {'channel': CHANNEL, "username": "Parselybot", "text": "Top 5 posts la
 attachments = []
 print api_results.json()
 for entry in api_results.json()['data']:
-    temp_dict = {"fallback": "Top Post: {}".format(entry['title']), "pretext":
-                 "Top Post: {}".format(entry['title'])}
+    fields = [{'title': "Author: {}".format(entry['author']), 
+    'value': "Hits: {}".format(entry['_hits']), 'short':'false'}]
+    temp_dict = {"fallback": "<{}|{}>".format(entry['url'], entry['title']), "pretext":
+                 "<{}|{}>".format(entry['url'], entry['title']), 'fields': fields}
+    attachments.append(temp_dict)
+json_payload = {'payload': payload, 'attachments': attachments}
 
 
-#r = requests.post(WEBHOOK_URL, data=json.dumps(payload))
+r = requests.post(WEBHOOK_URL, data=json.dumps(json_payload)) 

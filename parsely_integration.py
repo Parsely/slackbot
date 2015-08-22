@@ -7,7 +7,7 @@ from config import *
 # let's add some parser arguments
 parser = argparse.ArgumentParser(description='call Parsely API and send top post results to Slack!')
 parser.add_argument('--mention', nargs="*", help="usernames to mention")
-parser.add_argument('--num', nargs=1, type=int, default=5, help="number of posts to return")
+parser.add_argument('--num', nargs=1, default=5, help="number of posts to return")
 parser.add_argument('--no-thumbs', action='store_const', const="no_thumbs", help="don't get thumbnails")
 args = parser.parse_args()
 mentions = ''
@@ -17,8 +17,8 @@ url = "https://api.parsely.com/v2/analytics/posts?apikey={}&page=1&limit={}&sort
 api_results = requests.get(url)
 payload = {'channel': CHANNEL, "username": "Parselybot", "text": "Top 5 posts last 24 hours"}
 attachments = []
-intro_text =  {"fallback": "{}: Top {} Posts In 24 Hours".format(mentions, str(args.num[0])), 
-                "pretext": "{}: Top {} Posts In 24 Hours".format(mentions, str(args.num[0]))}
+intro_text =  {"fallback": "{}: Top {} Posts In 24 Hours".format(mentions, args.num[0]), 
+                "pretext": "{}: Top {} Posts In 24 Hours".format(mentions, args.num[0])}
 attachments.append(intro_text)
 print api_results.json()
 for entry in api_results.json()['data']:

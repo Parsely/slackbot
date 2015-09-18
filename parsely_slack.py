@@ -6,16 +6,26 @@ import sys
 from config import *
 
 # let's add some parser arguments
-parser = argparse.ArgumentParser(description='call Parsely API and send top post results to Slack!')
-parser.add_argument('api_type', help='realtime or analytics') 
-parser.add_argument('--mention', nargs='*', help='usernames to mention')
-parser.add_argument('--limit', default=5, help='number of records to return')
-parser.add_argument('--no-thumbs', action='store_const', const='no_thumbs', help="don't get thumbnails")
-parser.add_argument('--shares', action='store_const', const='shares', 
-                    help='get share counts for posts')
+parser = argparse.ArgumentParser(
+        description='call Parsely API and send top post results to Slack!')
+parser.add_argument(
+    'api_type', help='realtime or analytics') 
+parser.add_argument(
+    '--mention', nargs='*', help='usernames to mention')
+parser.add_argument(
+    '--limit', default=5, help='number of records to return')
+parser.add_argument(
+    '--no-thumbs', action='store_const', const='no_thumbs', 
+    help="don't get thumbnails")
+parser.add_argument(
+    '--shares', action='store_const', const='shares', 
+    help='get share counts for posts')
 parser.add_argument('--time', default='1h', 
-    help='Realtime only: number of minutes or hours for time period, up to 24h. Examples of valid values: 5m, 15m, 1h, 12h.')
-parser.add_argument('--days', default=3, help='analytics only: number of days to count hits for (Default: 3)')
+    help=('Realtime only: number of minutes or hours for time period,' 
+    'up to 24h. Examples of valid values: 5m, 15m, 1h, 12h.')
+parser.add_argument(
+    '--days', default=3, 
+    help='analytics only: number of days to count hits for (Default: 3)')
 args = parser.parse_args()
 
 mentions = ''

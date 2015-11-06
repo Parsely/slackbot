@@ -51,6 +51,15 @@ class ParselySlack(object):
                     'fallback': '<{}|{}>'.format(entry.url, 
                     entry['title']), 
                     'pretext':'<{}|{}>'.format(entry.url, entry.title)}
+                shares = self._client.shares(post=entry.url)
+                shares_dict = {
+                    'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
+                        shares.twitter, shares.facebook),
+                        'short': 'true'}
+                fields.append(shares_dict)
+            temp_dict['fields'] = fields
+            attachments.append(temp_dict)
+        return attachments
                 
 class AnalyticsHandler(object):
     ''' handles analytics parsing '''
@@ -90,7 +99,8 @@ class AnalyticsHandler(object):
         # have days, let's build query
         text = 'Top 10 {} in Last {} Days'.format(parsed['meta'], options['days'])
         post_list = self._client.analytics(aspect=parsed['meta'], **options)
-        return post_list
+        attachments = self.build_attachments(post_list, text)
+        self.send(attachments, text=text)
         
         
         

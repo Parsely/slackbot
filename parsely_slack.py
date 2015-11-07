@@ -1,20 +1,23 @@
+from __future__ import unicode_literals
 import requests
 import datetime
+import json
 from datetime import datetime as dt
 from parsely.parsely import Parsely
 import re
-
+from config import *
 
 class ParselySlack(object):
     
     def __init__(self, apikey, secret):
         self._client = Parsely(apikey, secret=secret)
+        self.analytics = AnalyticsHandler(self._client)
     
-    def send(attachments=None, channel=None, username=None, text='default text'):
+    def send(self, attachments=None, channel=None, username=None, text='default text'):
         ''' send a dict to slack properly '''
         # use the class objects if they exist
-        slack_channel = channel or self.channel or "General"
-        slack_username = username or self.username or "Parselybot"
+        slack_channel = channel or "general"
+        slack_username = username or "Parselybot"
         
         payload = {
             'channel': channel, 
@@ -26,30 +29,32 @@ class ParselySlack(object):
 
         # take our json data and send it up
         try:
-            requests.post(WEBHOOK_URL, data=json.dumps(json_payload))
+            test_output = requests.post(WEBHOOK_URL, data=json.dumps(json_payload))
+            print test_output.content
             self.attachments = []
         except requests.exceptions.MissingSchema:
             print(
                 'The webhook URL appears to be invalid. '
                 'Are you sure you have the right webhook URL?')
                 
-    def build_attachments(entries, text):
+    def build_attachments(self, entries, text):
         ''' takes list of Parsely meta objects and makes slack attachments out of them'''
-        attachments = []
+        attachments, temp_dict = [], {}
         intro_text = {'fallback': text, 
                    'pretext': text}
         attachments.append(intro_text)
         for entry in entries:
             meta = entry.__class__.__name__
+            title = entry.url if meta == 'Post' else entry.name
             fields = [{
-                'title': '{}: {}'.format(meta, entry.name), 
-                'value': 'Hits: {}'.format(entry['_hits']), 
-                'short':'false'
-                }]
-            if entry.url:
+                    'value': 'Hits: {}'.format(entry.hits), 
+                    'short':'false'
+                    }]
+            if meta == 'Post':
+                fields[0]['title'] = 'Author: {}'.format(entry.author) 
                 temp_dict = {
                     'fallback': '<{}|{}>'.format(entry.url, 
-                    entry['title']), 
+                    entry.title), 
                     'pretext':'<{}|{}>'.format(entry.url, entry.title)}
                 shares = self._client.shares(post=entry.url)
                 shares_dict = {
@@ -57,6 +62,13 @@ class ParselySlack(object):
                         shares.twitter, shares.facebook),
                         'short': 'true'}
                 fields.append(shares_dict)
+            else:
+                value_url_string = entry.name.replace(' ', '_')
+                meta_url_string = meta + "s"
+                url = 'http://dash.parsely.com/{}/{}/{}/'.format(APIKEY, meta_url_string.lower(), value_url_string)
+                temp_dict = {
+                    'fallback': '<{}|{}>'.format(url, entry.name), 
+                    'pretext':'<{}|{}>'.format(url, entry.name)}
             temp_dict['fields'] = fields
             attachments.append(temp_dict)
         return attachments
@@ -68,21 +80,21 @@ class AnalyticsHandler(object):
         self._client = client
     
     def parse(self, commands):
-        options = {}
+        parsed, options = {}, {}
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         # need a better way to do this, have a think later, this is gross
         
-        if len(command) == 2:
+        if len(commands) == 2:
             # sample command : /parsely, posts, monthtodate
-        parsed['meta'] = command[0].strip()
-        parsed['time'] = command[1].strip()
+            parsed['meta'] = commands[0].strip()
+            parsed['time'] = commands[1].strip()
         
         
-        elif len(command) == 3:
+        elif len(commands) == 3:
             # sample command: /parsely author, John Flynn, monthtodate
-        parsed['meta'] = command[0].strip()
-        parsed['value'] = command[1].strip()
-        parsed['time'] = command[2].strip()
+            parsed['meta'] = commands[0].strip()
+            parsed['value'] = commands[1].strip()
+            parsed['time'] = commands[2].strip()
         
         
         # let's compute some sane things from these
@@ -97,17 +109,13 @@ class AnalyticsHandler(object):
             options['days'] = '1'
             
         # have days, let's build query
-        text = 'Top 10 {} in Last {} Days'.format(parsed['meta'], options['days'])
         post_list = self._client.analytics(aspect=parsed['meta'], **options)
-        attachments = self.build_attachments(post_list, text)
-        self.send(attachments, text=text)
+        text = 'Top {} {} in Last {} Days'.format(str(len(post_list)), parsed['meta'], options['days'])
+        return post_list, text
         
         
         
-        
-            
-            
-    def 
+    
         
         
             

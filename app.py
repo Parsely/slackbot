@@ -7,24 +7,27 @@ app = Flask(__name__)
 slack = Slack(app)
 apikey = ""
 secret = ""
-slackbot = parsely_slack.ParselySlack(apikey, secret)
+slackbot = parsely_slack.ParselySlack(APIKEY, SHARED_SECRET)
 @slack.command('parsely', 'DcJRP8Lr9NRcjrQqAFoNQm2K', 'T090APE76',
                 ['POST']) 
 def parsely(**kwargs):
     text = kwargs.get('text')
     commands = [word.strip() for word in text.strip().split(',')]
     if 'author' or 'post' or 'section' or 'tag' in commands[0]:
-        slackbot.analytics(commands)
-    elif shares:
-        slackbot.shares(commands)
-    elif referrers:
-        slackbot.referrers(commands)
-    elif realtime(commands):
-        slackbot.realtime(commands)
-    return slack.response("Sorry, didn't recognize the command!")
+        post_list, text = slackbot.analytics.parse(commands)
+        attachments = slackbot.build_attachments(post_list, text)
+        slackbot.send(attachments, text=text)
+    # elif shares:
+    #     slackbot.shares(commands)
+    # elif referrers:
+    #     slackbot.referrers(commands)
+    # elif realtime(commands):
+    #     slackbot.realtime(commands)
+    else:
+        return slack.response("Sorry, didn't recognize that command!")
+    return slack.response("")
 
 def analytics(command_list):
-    slackbot.
     pass
 
 def shares(command_list):

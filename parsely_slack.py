@@ -57,11 +57,12 @@ class ParselySlack(object):
                     entry.title), 
                     'pretext':'<{}|{}>'.format(entry.url, entry.title)}
                 shares = self._client.shares(post=entry.url)
-                shares_dict = {
-                    'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
-                        shares.twitter, shares.facebook),
-                        'short': 'true'}
-                fields.append(shares_dict)
+                if shares:
+                    shares_dict = {
+                        'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
+                            shares.twitter, shares.facebook),
+                            'short': 'true'}
+                    fields.append(shares_dict)
             else:
                 value_url_string = entry.name.replace(' ', '_')
                 meta_url_string = meta + "s"
@@ -89,32 +90,51 @@ class AnalyticsHandler(object):
             parsed['meta'] = commands[0].strip()
             parsed['time'] = commands[1].strip()
         
-        
         elif len(commands) == 3:
             # sample command: /parsely author, John Flynn, monthtodate
             parsed['meta'] = commands[0].strip()
             parsed['value'] = commands[1].strip()
             parsed['time'] = commands[2].strip()
-        
-        
-        # let's compute some sane things from these
-        if parsed['time'] == 'monthtodate':
-            options['days'] = dt.now().day
-        
-        elif parsed['time'] == 'weektodate':
-            begin_date = dt.now() - datetime.timedelta(dt.now().weekday())
-            options['days'] = begin_date.day
-        
-        elif parsed['time'] == 'today':
-            options['days'] = '1'
             
+        if parsed['time'][-1].lower() == 'm' or parsed['time'][-1].lower() == 'h':
+            return self.realtime(parsed)
+        options['days'] = self.string_to_time(parsed['time'])
         # have days, let's build query
         post_list = self._client.analytics(aspect=parsed['meta'], **options)
         text = 'Top {} {} in Last {} Days'.format(str(len(post_list)), parsed['meta'], options['days'])
         return post_list, text
         
+    def string_to_time(self, time):
+        # turn a string like monthtodate, weektodate, into a time
+        # let's compute some sane things from these
+        if time == 'monthtodate':
+            days = dt.now().day
         
+        elif time == 'weektodate':
+            begin_date = dt.now() - datetime.timedelta(dt.now().weekday())
+            days = begin_date.day
         
+        elif time == 'today':
+            days = '1'
+            
+        return days
+        
+    def realtime(self, parsed):
+        # takes parsed commands and returns a post_list for realtime
+        # need a little function here we can add attributes to
+        time_period = lambda: None
+        time_period.hours = []
+        if parsed['time'][-1].lower() == 'h':
+            time_period.hours = int(parsed['time'][:2])
+            time_period.time_str = 'Hours'
+        elif parsed['time'][-1].lower() == 'm':
+            time_period.minutes = int(parsed['time'][:2])
+            time_period.time_str = 'Minutes'
+        post_list = self._client.realtime(aspect=parsed['meta'], per=time_period)
+        print parsed['meta']
+        print post_list
+        text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:2], str(time_period.time_str))
+        return post_list, text
     
         
         

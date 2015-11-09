@@ -5,13 +5,20 @@ import json
 from datetime import datetime as dt
 from parsely.parsely import Parsely
 import re
+import requests
 from config import *
 
 class ParselySlack(object):
     
-    def __init__(self, apikey, secret):
+    def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
         self.analytics = AnalyticsHandler(self._client)
+        
+        if username and password:
+            login_data = {'email': username, 'password': password}
+            url = "http://dash.parsely.com/login"
+            self._session = requests.Session()
+            self.dash_con = self._session.post(url, data=login_data)
     
     def send(self, attachments=None, channel=None, username=None, text='default text'):
         ''' send a dict to slack properly '''
@@ -37,7 +44,7 @@ class ParselySlack(object):
                 'The webhook URL appears to be invalid. '
                 'Are you sure you have the right webhook URL?')
                 
-    def build_attachments(self, entries, text):
+    def build_meta_attachments(self, entries, text):
         ''' takes list of Parsely meta objects and makes slack attachments out of them'''
         attachments, temp_dict = [], {}
         intro_text = {'fallback': text, 
@@ -73,6 +80,14 @@ class ParselySlack(object):
             temp_dict['fields'] = fields
             attachments.append(temp_dict)
         return attachments
+        
+    def build_post_attachments(self, entry, text):
+        ''' takes one post and builds an attachment for it '''
+        pass
+    
+    def get_dash_link(url):
+        ''' gets a dash link for the given URL '''
+        
                 
 class AnalyticsHandler(object):
     ''' handles analytics parsing '''
@@ -135,6 +150,11 @@ class AnalyticsHandler(object):
         print post_list
         text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:2], str(time_period.time_str))
         return post_list, text
+        
+        
+    def post_detail(self, post, parsed):
+        # takes a post and some parsed commands and returns post detail
+        
     
         
         

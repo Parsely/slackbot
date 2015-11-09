@@ -15,7 +15,7 @@ def parsely(**kwargs):
     commands = [word.strip() for word in text.strip().split(',')]
     if 'author' or 'post' or 'section' or 'tag' in commands[0]:
         post_list, text = slackbot.analytics.parse(commands)
-        attachments = slackbot.build_attachments(post_list, text)
+        attachments = slackbot.build_meta_attachments(post_list, text)
         slackbot.send(attachments, text=text)
     # elif shares:
     #     slackbot.shares(commands)

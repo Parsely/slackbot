@@ -15,10 +15,7 @@ class ParselySlack(object):
         self.analytics = AnalyticsHandler(self._client)
         
         if username and password:
-            login_data = {'email': username, 'password': password}
-            url = "http://dash.parsely.com/login"
-            self._session = requests.Session()
-            self.dash_con = self._session.post(url, data=login_data)
+            self.login_data = {'email': username, 'password': password}
     
     def send(self, attachments=None, channel=None, username=None, text='default text'):
         ''' send a dict to slack properly '''
@@ -50,9 +47,10 @@ class ParselySlack(object):
         intro_text = {'fallback': text, 
                    'pretext': text}
         attachments.append(intro_text)
-        for entry in entries:
+        for index, entry in enumerate(entries):
             meta = entry.__class__.__name__
-            title = entry.url if meta == 'Post' else entry.name
+            title = str(index+1) + '. ' + entry.title if meta == 'Post' else str(index+1) + '. ' + entry.name
+            print title
             fields = [{
                     'value': 'Hits: {}'.format(entry.hits), 
                     'short':'false'
@@ -61,15 +59,22 @@ class ParselySlack(object):
                 fields[0]['title'] = 'Author: {}'.format(entry.author) 
                 temp_dict = {
                     'fallback': '<{}|{}>'.format(entry.url, 
-                    entry.title), 
-                    'pretext':'<{}|{}>'.format(entry.url, entry.title)}
+                    title), 
+                    'pretext':'<{}|{}>'.format(entry.url, title)}
                 shares = self._client.shares(post=entry.url)
+                temp_dict['thumb_url'] = entry.thumb_url_medium
                 if shares:
                     shares_dict = {
                         'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
                             shares.twitter, shares.facebook),
                             'short': 'true'}
                     fields.append(shares_dict)
+                if len(entries) == 1:
+                    visitors_dict = {
+                        'title': 'visitors',
+                        'value': '{}'.format(entry.visitors),
+                        'short': 'true'}
+                    fields.append(visitors_dict)
             else:
                 value_url_string = entry.name.replace(' ', '_')
                 meta_url_string = meta + "s"
@@ -81,12 +86,14 @@ class ParselySlack(object):
             attachments.append(temp_dict)
         return attachments
         
+        
     def build_post_attachments(self, entry, text):
         ''' takes one post and builds an attachment for it '''
         pass
     
     def get_dash_link(url):
         ''' gets a dash link for the given URL '''
+        pass
         
                 
 class AnalyticsHandler(object):
@@ -104,6 +111,8 @@ class AnalyticsHandler(object):
             # sample command : /parsely, posts, monthtodate
             parsed['meta'] = commands[0].strip()
             parsed['time'] = commands[1].strip()
+            if parsed['meta'] == 'post':
+                parsed['value'] = commands[1].strip()
         
         elif len(commands) == 3:
             # sample command: /parsely author, John Flynn, monthtodate
@@ -115,8 +124,19 @@ class AnalyticsHandler(object):
             return self.realtime(parsed)
         options['days'] = self.string_to_time(parsed['time'])
         # have days, let's build query
+        if parsed['meta'] == 'post':
+            post = self.post_detail(parsed, **options)
+            text = "Detailed Look"
+            return post, text
+        elif parsed['meta'][-1] != 's':
+            text = "Detailed Look"
+            post = self.meta_detail(parsed, **options)
+            return post, text
+            
         post_list = self._client.analytics(aspect=parsed['meta'], **options)
         text = 'Top {} {} in Last {} Days'.format(str(len(post_list)), parsed['meta'], options['days'])
+        if (parsed['meta'] == 'posts'):
+            self.last_post_list = post_list
         return post_list, text
         
     def string_to_time(self, time):
@@ -132,6 +152,11 @@ class AnalyticsHandler(object):
         elif time == 'today':
             days = '1'
             
+        elif time == 'yesterday':
+            days = '1'
+            
+        else:
+            days = '1'
         return days
         
     def realtime(self, parsed):
@@ -146,14 +171,32 @@ class AnalyticsHandler(object):
             time_period.minutes = int(parsed['time'][:2])
             time_period.time_str = 'Minutes'
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period)
-        print parsed['meta']
-        print post_list
         text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:2], str(time_period.time_str))
         return post_list, text
         
         
-    def post_detail(self, post, parsed):
+        
+        
+    def post_detail(self, parsed, **kwargs):
         # takes a post and some parsed commands and returns post detail
+        if 'http' in parsed.get('value'):
+            post = [self._client.post_detail(post=parsed['value'], **options)]
+        else:
+            post_num = int(parsed['value'])
+            post = [self._client.post_detail(post=self.last_post_list[post_num-1], **kwargs)]
+        return post
+        
+            
+            
+    
+    def spark_string(ints, fit_min=False):
+        min_range = 0
+        if fit_min:
+            min_range = min(ints)
+    
+        step_range = max(ints) - min_range
+        step = ((step_range) / float(len(ticks) - 1)) or 1
+        return u''.join(ticks[int(round((i - min_range) / step))] for i in ints)
         
     
         

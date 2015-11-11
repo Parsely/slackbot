@@ -165,10 +165,10 @@ class AnalyticsHandler(object):
         time_period = lambda: None
         time_period.hours = []
         if parsed['time'][-1].lower() == 'h':
-            time_period.hours = int(parsed['time'][:2])
+            time_period.hours = int(parsed['time'][:-1])
             time_period.time_str = 'Hours'
         elif parsed['time'][-1].lower() == 'm':
-            time_period.minutes = int(parsed['time'][:2])
+            time_period.minutes = int(parsed['time'][:-1])
             time_period.time_str = 'Minutes'
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period)
         text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:2], str(time_period.time_str))

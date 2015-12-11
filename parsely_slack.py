@@ -121,18 +121,23 @@ class AnalyticsHandler(object):
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         # need a better way to do this, have a think later, this is gross
         
-        if len(commands) == 2:
+        metas = ["posts", "tags", "sections", "authors"]
+        metas_detail = ["tag", "section", "author"]
+        if commands[0] in metas:
             # sample command : /parsely, posts, monthtodate
             parsed['meta'] = commands[0].strip()
             parsed['time'] = commands[1].strip()
             if parsed['meta'] == 'post':
                 parsed['value'] = commands[1].strip()
         
-        elif len(commands) == 3:
+        elif commands[0] in metas_detail:
             # sample command: /parsely author, John Flynn, monthtodate
             parsed['meta'] = commands[0].strip()
             parsed['value'] = commands[1].strip()
             parsed['time'] = commands[2].strip()
+            
+        else:
+            return None, None
             
         if parsed['time'][-1].lower() == 'm' or parsed['time'][-1].lower() == 'h':
             return self.realtime(parsed, **options)

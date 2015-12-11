@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import requests
+import calendar
 import datetime
 import json
 from datetime import datetime as dt
@@ -13,7 +14,8 @@ class ParselySlack(object):
     def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
         self.analytics = AnalyticsHandler(self._client)
-        
+        # pull default config params
+        self.config = {'days': DAYS, 'limit': LIMIT}
         if username and password:
             self.login_data = {'email': username, 'password': password}
     
@@ -34,7 +36,6 @@ class ParselySlack(object):
         # take our json data and send it up
         try:
             test_output = requests.post(WEBHOOK_URL, data=json.dumps(json_payload))
-            print test_output.content
             self.attachments = []
         except requests.exceptions.MissingSchema:
             print(
@@ -49,51 +50,63 @@ class ParselySlack(object):
         attachments.append(intro_text)
         for index, entry in enumerate(entries):
             meta = entry.__class__.__name__
-            title = str(index+1) + '. ' + entry.title if meta == 'Post' else str(index+1) + '. ' + entry.name
-            print title
-            fields = [{
-                    'value': 'Hits: {}'.format(entry.hits), 
-                    'short':'false'
-                    }]
             if meta == 'Post':
-                fields[0]['title'] = 'Author: {}'.format(entry.author) 
-                temp_dict = {
-                    'fallback': '<{}|{}>'.format(entry.url, 
-                    title), 
-                    'pretext':'<{}|{}>'.format(entry.url, title)}
-                shares = self._client.shares(post=entry.url)
-                temp_dict['thumb_url'] = entry.thumb_url_medium
-                if shares:
-                    shares_dict = {
-                        'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
-                            shares.twitter, shares.facebook),
-                            'short': 'true'}
-                    fields.append(shares_dict)
+                attachment = self.build_post_attachment(index, entry)
                 if len(entries) == 1:
                     visitors_dict = {
                         'title': 'visitors',
                         'value': '{}'.format(entry.visitors),
                         'short': 'true'}
-                    fields.append(visitors_dict)
+                    res_list.append(visitors_dict)
+                    attachment['fields'].append(visitors_dict)
+                attachments.append(attachment)
             else:
-                value_url_string = entry.name.replace(' ', '_')
-                meta_url_string = meta + "s"
-                url = 'http://dash.parsely.com/{}/{}/{}/'.format(APIKEY, meta_url_string.lower(), value_url_string)
-                temp_dict = {
-                    'fallback': '<{}|{}>'.format(url, entry.name), 
-                    'pretext':'<{}|{}>'.format(url, entry.name)}
-            temp_dict['fields'] = fields
-            attachments.append(temp_dict)
+                attachments.append(self.build_meta_attachment(index, entry))
         return attachments
         
         
-    def build_post_attachments(self, entry, text):
+    def build_post_attachment(self, index, entry):
         ''' takes one post and builds an attachment for it '''
-        pass
+        title = str(index+1) + '. ' + entry.title
+        dash_link = self.get_dash_link(entry.url)
+        res_list = [{
+                'value': 'Hits: {}'.format(entry.hits), 
+                'short':'false'
+                }]
+        res_list[0]['title'] = 'Author: {}'.format(entry.author) 
+        temp_dict = {
+            'fallback': '<{}|{}>'.format(dash_link, 
+            title), 
+            'pretext':'<{}|{}>'.format(dash_link, title)}
+        shares = self._client.shares(post=entry.url)
+        temp_dict['thumb_url'] = entry.thumb_url_medium
+        if shares:
+            shares_dict = {
+                'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
+                    shares.twitter, shares.facebook),
+                    'short': 'true'}
+            res_list.append(shares_dict)
+        temp_dict['fields'] = res_list
+        return temp_dict
+            
+    def build_meta_attachment(self, index, entry):
+        title = str(index+1) + '. ' + entry.name
+        value_url_string = entry.name.replace(' ', '_')
+        meta_url_string = meta + "s"
+        url = 'http://dash.parsely.com/{}/{}/{}/'.format(APIKEY, meta_url_string.lower(), value_url_string)
+        fields = [{
+                'value': 'Hits: {}'.format(entry.hits), 
+                'short':'false'
+                }]
+        temp_dict = {
+            'fallback': '<{}|{}>'.format(url, entry.name), 
+            'pretext':'<{}|{}>'.format(url, entry.name)}
+        temp_dict['fields'] = fields
+        return temp_dict
     
-    def get_dash_link(url):
+    def get_dash_link(self, url):
         ''' gets a dash link for the given URL '''
-        pass
+        return "http://dash.parsely.com/{}/find?url={}".format(APIKEY, url)
         
                 
 class AnalyticsHandler(object):
@@ -104,6 +117,7 @@ class AnalyticsHandler(object):
     
     def parse(self, commands):
         parsed, options = {}, {}
+        options['limit'] = LIMIT
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         # need a better way to do this, have a think later, this is gross
         
@@ -121,7 +135,7 @@ class AnalyticsHandler(object):
             parsed['time'] = commands[2].strip()
             
         if parsed['time'][-1].lower() == 'm' or parsed['time'][-1].lower() == 'h':
-            return self.realtime(parsed)
+            return self.realtime(parsed, **options)
         options['days'] = self.string_to_time(parsed['time'])
         # have days, let's build query
         if parsed['meta'] == 'post':
@@ -146,8 +160,8 @@ class AnalyticsHandler(object):
             days = dt.now().day
         
         elif time == 'weektodate':
-            begin_date = dt.now() - datetime.timedelta(dt.now().weekday())
-            days = begin_date.day
+            begin_date = dt.now().weekday()
+            days = begin_date + 1
         
         elif time == 'today':
             days = '1'
@@ -159,7 +173,7 @@ class AnalyticsHandler(object):
             days = '1'
         return days
         
-    def realtime(self, parsed):
+    def realtime(self, parsed, **kwargs):
         # takes parsed commands and returns a post_list for realtime
         # need a little function here we can add attributes to
         time_period = lambda: None
@@ -170,8 +184,8 @@ class AnalyticsHandler(object):
         elif parsed['time'][-1].lower() == 'm':
             time_period.minutes = int(parsed['time'][:-1])
             time_period.time_str = 'Minutes'
-        post_list = self._client.realtime(aspect=parsed['meta'], per=time_period)
-        text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:2], str(time_period.time_str))
+        post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, **kwargs)
+        text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:-1], str(time_period.time_str))
         return post_list, text
         
         

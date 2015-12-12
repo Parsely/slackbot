@@ -3,6 +3,8 @@ import requests
 import calendar
 import datetime
 import json
+import pytz
+import tzlocal
 from datetime import datetime as dt
 from parsely.parsely import Parsely
 import re
@@ -16,8 +18,6 @@ class ParselySlack(object):
         self.analytics = AnalyticsHandler(self._client)
         # pull default config params
         self.config = {'days': DAYS, 'limit': LIMIT}
-        if username and password:
-            self.login_data = {'email': username, 'password': password}
     
     def send(self, attachments=None, channel=None, username=None, text='default text'):
         ''' send a dict to slack properly '''
@@ -91,6 +91,7 @@ class ParselySlack(object):
             
     def build_meta_attachment(self, index, entry):
         title = str(index+1) + '. ' + entry.name
+        meta = entry.__class__.__name__
         value_url_string = entry.name.replace(' ', '_')
         meta_url_string = meta + "s"
         url = 'http://dash.parsely.com/{}/{}/{}/'.format(APIKEY, meta_url_string.lower(), value_url_string)
@@ -138,8 +139,13 @@ class AnalyticsHandler(object):
             
         else:
             return None, None
-            
-        if parsed['time'][-1].lower() == 'm' or parsed['time'][-1].lower() == 'h':
+         
+        if not parsed['time']:
+            # give default of last hour
+            parsed['time'] = '1h'
+        if (parsed['time'][-1].lower() == 'm' or 
+                parsed['time'][-1].lower() == 'h' or 
+                parsed['time'] == 'today'):
             return self.realtime(parsed, **options)
         options['days'] = self.string_to_time(parsed['time'])
         # have days, let's build query
@@ -161,36 +167,46 @@ class AnalyticsHandler(object):
     def string_to_time(self, time):
         # turn a string like monthtodate, weektodate, into a time
         # let's compute some sane things from these
+        time_period = lambda: None
+        time_period.hours = []
         if time == 'monthtodate':
-            days = dt.now().day
+            res = dt.now(tzlocal.get_localzone()).day
         
         elif time == 'weektodate':
-            begin_date = dt.now().weekday()
-            days = begin_date + 1
+            begin_date = dt.now(tzlocal.get_localzone()).weekday()
+            res = begin_date + 1
         
         elif time == 'today':
-            days = '1'
+            res = dt.now(tzlocal.get_localzone()).hour
+            time_period.hours = int(res)
+            res = time_period
+            
+        elif time[-1].lower() == 'h':
+            time_period.hours = int(time[:-1])
+            time_period.time_str = 'Hours'
+            res = time_period
+                
+        elif time[-1].lower() == 'm':
+            time_period.minutes = int(time[:-1])
+            time_period.time_str = 'Minutes'
+            res = time_period
             
         elif time == 'yesterday':
-            days = '1'
+            res = '1'
             
         else:
-            days = '1'
-        return days
+            res = '1'
+        return res
         
     def realtime(self, parsed, **kwargs):
         # takes parsed commands and returns a post_list for realtime
         # need a little function here we can add attributes to
-        time_period = lambda: None
-        time_period.hours = []
-        if parsed['time'][-1].lower() == 'h':
-            time_period.hours = int(parsed['time'][:-1])
-            time_period.time_str = 'Hours'
-        elif parsed['time'][-1].lower() == 'm':
-            time_period.minutes = int(parsed['time'][:-1])
-            time_period.time_str = 'Minutes'
+        time_period = self.string_to_time(parsed['time'])
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, **kwargs)
-        text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:-1], str(time_period.time_str))
+        if parsed['time'] == 'today':
+            text = 'Top {} {} Today'.format(str(len(post_list)), parsed['meta'])
+        else:
+            text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:-1], str(time_period.time_str))
         return post_list, text
         
         

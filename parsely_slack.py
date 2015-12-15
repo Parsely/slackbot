@@ -12,11 +12,46 @@ import requests
 from config import *
 from reports import ReportsHandler
 
+def string_to_time(time):
+    # turn a string like monthtodate, weektodate, into a time
+    # let's compute some sane things from these
+    time_period = lambda: None
+    time_period.hours = []
+    if time == 'monthtodate':
+        res = dt.now(tzlocal.get_localzone()).day
+    
+    elif time == 'weektodate':
+        begin_date = dt.now(tzlocal.get_localzone()).weekday()
+        res = begin_date + 1
+    
+    elif time == 'today':
+        res = dt.now(tzlocal.get_localzone()).hour
+        time_period.hours = int(res)
+        res = time_period
+        
+    elif time[-1].lower() == 'h':
+        time_period.hours = int(time[:-1])
+        time_period.time_str = 'Hours'
+        res = time_period
+            
+    elif time[-1].lower() == 'm':
+        time_period.minutes = int(time[:-1])
+        time_period.time_str = 'Minutes'
+        res = time_period
+        
+    elif time == 'yesterday':
+        res = '1'
+        
+    else:
+        res = '1'
+    return res
+        
 class ParselySlack(object):
     
     def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
         self.analytics = AnalyticsHandler(self._client)
+        self.reports = ReportsHandler()
         # pull default config params
         self.config = {'days': DAYS, 'limit': LIMIT}
     
@@ -148,7 +183,7 @@ class AnalyticsHandler(object):
                 parsed['time'][-1].lower() == 'h' or 
                 parsed['time'] == 'today'):
             return self.realtime(parsed, **options)
-        options['days'] = self.string_to_time(parsed['time'])
+        options['days'] = string_to_time(parsed['time'])
         # have days, let's build query
         if parsed['meta'] == 'post':
             post = self.post_detail(parsed, **options)
@@ -165,44 +200,11 @@ class AnalyticsHandler(object):
             self.last_post_list = post_list
         return post_list, text
         
-    def string_to_time(self, time):
-        # turn a string like monthtodate, weektodate, into a time
-        # let's compute some sane things from these
-        time_period = lambda: None
-        time_period.hours = []
-        if time == 'monthtodate':
-            res = dt.now(tzlocal.get_localzone()).day
-        
-        elif time == 'weektodate':
-            begin_date = dt.now(tzlocal.get_localzone()).weekday()
-            res = begin_date + 1
-        
-        elif time == 'today':
-            res = dt.now(tzlocal.get_localzone()).hour
-            time_period.hours = int(res)
-            res = time_period
-            
-        elif time[-1].lower() == 'h':
-            time_period.hours = int(time[:-1])
-            time_period.time_str = 'Hours'
-            res = time_period
-                
-        elif time[-1].lower() == 'm':
-            time_period.minutes = int(time[:-1])
-            time_period.time_str = 'Minutes'
-            res = time_period
-            
-        elif time == 'yesterday':
-            res = '1'
-            
-        else:
-            res = '1'
-        return res
         
     def realtime(self, parsed, **kwargs):
         # takes parsed commands and returns a post_list for realtime
         # need a little function here we can add attributes to
-        time_period = self.string_to_time(parsed['time'])
+        time_period = string_to_time(parsed['time'])
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, **kwargs)
         if parsed['time'] == 'today':
             text = 'Top {} {} Today'.format(str(len(post_list)), parsed['meta'])

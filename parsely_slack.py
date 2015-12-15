@@ -10,6 +10,7 @@ from parsely.parsely import Parsely
 import re
 import requests
 from config import *
+from reports import ReportsHandler
 
 class ParselySlack(object):
     
@@ -111,7 +112,7 @@ class ParselySlack(object):
         
                 
 class AnalyticsHandler(object):
-    ''' handles analytics parsing '''
+    ''' handles  parsing '''
     
     def __init__(self, client):
         self._client = client

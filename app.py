@@ -19,6 +19,8 @@ def parsely(**kwargs):
             return slack.response("Sorry, didn't recognize that command!")
         attachments = slackbot.build_meta_attachments(post_list, text)
         slackbot.send(attachments, text=text)
+    elif 'reports' in commands[0]:
+        slackbot.reports.parse(commands)
     # elif shares:
     #     slackbot.shares(commands)
     # elif referrers:

@@ -39,8 +39,15 @@ def string_to_time(time):
         time_period.time_str = 'Minutes'
         res = time_period
         
+    elif time[-1].lower() == 'd':
+        if time[:-1].isdigit():
+            res = time[:-1]
+        
     elif time == 'yesterday':
         res = '1'
+        
+    elif time.isdigit():
+        res = time
         
     else:
         res = '1'
@@ -88,7 +95,7 @@ class ParselySlack(object):
             meta = entry.__class__.__name__
             if meta == 'Post':
                 attachment = self.build_post_attachment(index, entry)
-                if len(entries) == 1:
+                if entry.visitors:
                     visitors_dict = {
                         'title': 'visitors',
                         'value': '{}'.format(entry.visitors),
@@ -126,6 +133,7 @@ class ParselySlack(object):
         return temp_dict
             
     def build_meta_attachment(self, index, entry):
+        if parsed['meta'] == 'referrers':
         title = str(index+1) + '. ' + entry.name
         meta = entry.__class__.__name__
         value_url_string = entry.name.replace(' ', '_')
@@ -135,6 +143,16 @@ class ParselySlack(object):
                 'value': 'Hits: {}'.format(entry.hits), 
                 'short':'false'
                 }]
+        try:
+            fields[0]['value'] += "\nReferrer Type: {}".format(entry.ref_type)
+            if entry.ref_type == 'direct':
+                url = 'http://dash.parsely.com/{}/referrers/'.format(APIKEY)
+            if entry.ref_type == 'self':
+                url = 'http://dash.parsely.com/{}/{}/internal/{}'.format(APIKEY, meta_url_string.lower(), value_url_string)
+            else:
+                url = 'http://dash.parsely.com/{}/{}/{}/{}'.format(APIKEY, meta_url_string.lower(), entry.ref_type, value_url_string)
+        except AttributeError:
+            pass
         temp_dict = {
             'fallback': '<{}|{}>'.format(url, entry.name), 
             'pretext':'<{}|{}>'.format(url, entry.name)}
@@ -160,19 +178,16 @@ class AnalyticsHandler(object):
         
         metas = ["posts", "tags", "sections", "authors"]
         metas_detail = ["tag", "section", "author"]
-        if commands[0] in metas:
+        if commands[0] == 'referrers':
+            parsed['meta'] = commands[0]
+            parsed['time'] = commands[1]
+        elif commands[0] in metas:
             # sample command : /parsely, posts, monthtodate
             parsed['meta'] = commands[0].strip()
             parsed['time'] = commands[1].strip()
             if parsed['meta'] == 'post':
                 parsed['value'] = commands[1].strip()
         
-        elif commands[0] in metas_detail:
-            # sample command: /parsely author, John Flynn, monthtodate
-            parsed['meta'] = commands[0].strip()
-            parsed['value'] = commands[1].strip()
-            parsed['time'] = commands[2].strip()
-            
         else:
             return None, None
          
@@ -189,17 +204,12 @@ class AnalyticsHandler(object):
             post = self.post_detail(parsed, **options)
             text = "Detailed Look"
             return post, text
-        elif parsed['meta'][-1] != 's':
-            text = "Detailed Look"
-            post = self.meta_detail(parsed, **options)
-            return post, text
-            
+        
         post_list = self._client.analytics(aspect=parsed['meta'], **options)
         text = 'Top {} {} in Last {} Days'.format(str(len(post_list)), parsed['meta'], options['days'])
         if (parsed['meta'] == 'posts'):
             self.last_post_list = post_list
         return post_list, text
-        
         
     def realtime(self, parsed, **kwargs):
         # takes parsed commands and returns a post_list for realtime
@@ -213,8 +223,6 @@ class AnalyticsHandler(object):
         return post_list, text
         
         
-        
-        
     def post_detail(self, parsed, **kwargs):
         # takes a post and some parsed commands and returns post detail
         if 'http' in parsed.get('value'):
@@ -224,9 +232,6 @@ class AnalyticsHandler(object):
             post = [self._client.post_detail(post=self.last_post_list[post_num-1], **kwargs)]
         return post
         
-            
-            
-    
     def spark_string(ints, fit_min=False):
         min_range = 0
         if fit_min:
@@ -235,7 +240,6 @@ class AnalyticsHandler(object):
         step_range = max(ints) - min_range
         step = ((step_range) / float(len(ticks) - 1)) or 1
         return u''.join(ticks[int(round((i - min_range) / step))] for i in ints)
-        
     
         
         

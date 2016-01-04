@@ -57,8 +57,6 @@ class ParselySlack(object):
     
     def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
-        self.analytics = AnalyticsHandler(self._client)
-        self.reports = ReportsHandler()
         # pull default config params
         self.config = {'days': DAYS, 'limit': LIMIT}
     
@@ -133,7 +131,6 @@ class ParselySlack(object):
         return temp_dict
             
     def build_meta_attachment(self, index, entry):
-        if parsed['meta'] == 'referrers':
         title = str(index+1) + '. ' + entry.name
         meta = entry.__class__.__name__
         value_url_string = entry.name.replace(' ', '_')
@@ -163,13 +160,6 @@ class ParselySlack(object):
         ''' gets a dash link for the given URL '''
         return "http://dash.parsely.com/{}/find?url={}".format(APIKEY, url)
         
-                
-class AnalyticsHandler(object):
-    ''' handles  parsing '''
-    
-    def __init__(self, client):
-        self._client = client
-    
     def parse(self, commands):
         parsed, options = {}, {}
         options['limit'] = LIMIT

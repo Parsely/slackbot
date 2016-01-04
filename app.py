@@ -15,7 +15,7 @@ def parsely(**kwargs):
     commands = [word.strip() for word in text.strip().split(',')]
     print commands
     if 'author' or 'post' or 'section' or 'tag' or 'referrers' in commands[0]:
-        post_list, text = slackbot.analytics.parse(commands)
+        post_list, text = slackbot.parse(commands)
         if text == None:
             return slack.response("Sorry, didn't recognize that command!")
         attachments = slackbot.build_meta_attachments(post_list, text)

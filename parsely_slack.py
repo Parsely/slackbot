@@ -93,18 +93,10 @@ class ParselySlack(object):
             meta = entry.__class__.__name__
             if meta == 'Post':
                 attachment = self.build_post_attachment(index, entry)
-                if entry.visitors:
-                    visitors_dict = {
-                        'title': 'visitors',
-                        'value': '{}'.format(entry.visitors),
-                        'short': 'true'}
-                    res_list.append(visitors_dict)
-                    attachment['fields'].append(visitors_dict)
                 attachments.append(attachment)
             else:
                 attachments.append(self.build_meta_attachment(index, entry))
         return attachments
-        
         
     def build_post_attachment(self, index, entry):
         ''' takes one post and builds an attachment for it '''
@@ -127,6 +119,12 @@ class ParselySlack(object):
                     shares.twitter, shares.facebook),
                     'short': 'true'}
             res_list.append(shares_dict)
+            if entry.visitors:
+                visitors_dict = {
+                    'title': 'visitors',
+                    'value': '{}'.format(entry.visitors),
+                    'short': 'true'}
+                res_list.append(visitors_dict)
         temp_dict['fields'] = res_list
         return temp_dict
             

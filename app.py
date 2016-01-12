@@ -13,7 +13,6 @@ slackbot = parsely_slack.ParselySlack(APIKEY, SHARED_SECRET)
 def parsely(**kwargs):
     text = kwargs.get('text')
     commands = [word.strip() for word in text.strip().split(',')]
-    print commands
     if 'author' or 'post' or 'section' or 'tag' or 'referrers' in commands[0]:
         post_list, text = slackbot.parse(commands)
         if text == None:

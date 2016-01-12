@@ -162,8 +162,6 @@ class ParselySlack(object):
         parsed, options = {}, {}
         options['limit'] = LIMIT
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
-        # need a better way to do this, have a think later, this is gross
-        
         metas = ["posts", "tags", "sections", "authors"]
         metas_detail = ["tag", "section", "author"]
         if commands[0] == 'referrers':
@@ -171,8 +169,13 @@ class ParselySlack(object):
             parsed['time'] = commands[1]
         elif commands[0] in metas:
             # sample command : /parsely, posts, monthtodate
-            parsed['meta'] = commands[0].strip()
-            parsed['time'] = commands[1].strip()
+            if len(commands) == 2:
+                parsed['meta'] = commands[0].strip()
+                parsed['time'] = commands[1].strip()
+            if len(commands) == 3:
+                parsed['meta'] = commands[0].strip()
+                parsed['value'] = commands[1].strip()
+                parsed['time'] = commands[2].strip()
             if parsed['meta'] == 'post':
                 parsed['value'] = commands[1].strip()
         

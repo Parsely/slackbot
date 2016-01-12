@@ -10,7 +10,8 @@ from parsely.parsely import Parsely
 import re
 import requests
 from config import *
-from reports import ReportsHandler
+from threading import Timer
+
 
 def string_to_time(time):
     # turn a string like monthtodate, weektodate, into a time
@@ -58,7 +59,12 @@ class ParselySlack(object):
     def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
         # pull default config params
-        self.config = {'days': DAYS, 'limit': LIMIT}
+        self.config = {'days': DAYS, 'limit': LIMIT, 'threshold': 'THRESHOLD'}
+        self.trended_urls = []
+        if THRESHOLD:
+            self.alerts_timer = Timer(20.0, self.alerts_polling, [self.threshold], {})
+            self.alerts_timer.daemon = True
+            self.alerts_timer.start()
     
     def send(self, attachments=None, channel=None, username=None, text='default text'):
         ''' send a dict to slack properly '''
@@ -206,15 +212,22 @@ class ParselySlack(object):
         # takes parsed commands and returns a post_list for realtime
         # need a little function here we can add attributes to
         time_period = string_to_time(parsed['time'])
+        filter_string, time_string = "", ""
+        if parsed.get('value'):
+            value_list = [x.strip() for x in parsed['value'].split(':')]
+            filter_meta, value = value_list
+            kwargs[filter_meta] = value
+            filter_string = "For {} {}".format(filter_meta, value)
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, **kwargs)
         if parsed['meta'] == 'referrers':
             post_list.sort(key=lambda x: x.hits, reverse=True)
             # for some reason realtime referrers doesn't honor limit
             post_list = post_list[:LIMIT]
         if parsed['time'] == 'today':
-            text = 'Top {} {} Today'.format(str(len(post_list)), parsed['meta'])
+            time_string = "Today"
         else:
-            text = 'Top {} {} in Last {} {}'.format(str(len(post_list)), parsed['meta'], parsed['time'][:-1], str(time_period.time_str))
+            time_string = "In Last {} {}".format(parsed['time'][:-1], str(time_period.time_str))
+        text = "Top {} {} {} {}".format(str(len(post_list)), parsed['meta'], filter_string, time_string)
         return post_list, text
         
         
@@ -236,6 +249,26 @@ class ParselySlack(object):
         step = ((step_range) / float(len(ticks) - 1)) or 1
         return u''.join(ticks[int(round((i - min_range) / step))] for i in ints)
     
+    def alerts_polling(self, threshold):
+        time_period = string_to_time('5m')
+        print "lerts polling fired!"
+        posts = self._client.realtime(aspect='posts', per=time_period, limit=100)
+        post_list = []
+        for post in posts:
+            if post.hits >= threshold and post.url not in self.trended_urls:
+                post_list.append(post)
+                self.trended_urls.append(post.url)
+        if post_list:
+            text = "The posts below might be trending!"
+            attachments = self.build_meta_attachments(post_list, text)
+            self.send(attachments, text)
+        self.alerts_timer = Timer(300.0, self.alerts_polling, [self.threshold], {})
+        self.alerts_timer.daemon = True
+        self.alerts_timer.start()
+        
+    def trended_urls_clear(self):
+        # clear trended urls so if they trend again after a couple of days they'll
+        # show up again
+        self.trended_urls = []
         
         
-            

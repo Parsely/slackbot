@@ -204,6 +204,10 @@ class ParselySlack(object):
         # need a little function here we can add attributes to
         time_period = string_to_time(parsed['time'])
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, **kwargs)
+        if parsed['meta'] == 'referrers':
+            post_list.sort(key=lambda x: x.hits, reverse=True)
+            # for some reason realtime referrers doesn't honor limit
+            post_list = post_list[:LIMIT]
         if parsed['time'] == 'today':
             text = 'Top {} {} Today'.format(str(len(post_list)), parsed['meta'])
         else:

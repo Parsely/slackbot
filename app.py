@@ -3,14 +3,15 @@ from flask_slack import Slack
 from config import *
 import parsely_slack
 import threading
+import urlparse
 app = Flask(__name__)
 
 slack = Slack(app)
 apikey = ""
 secret = ""
 slackbot = parsely_slack.ParselySlack(APIKEY, SHARED_SECRET)
-@slack.command('parsely', 'DcJRP8Lr9NRcjrQqAFoNQm2K', 'T090APE76',
-                ['POST']) 
+team_id = urlparse.urlparse(WEBHOOK_URL).path.split('/')[2]
+@slack.command('parsely', token=SLACK_TOKEN, team_id=team_id, methods=['POST']) 
 def parsely(**kwargs):
     text = kwargs.get('text')
     commands = [word.strip() for word in text.strip().split(',')]
@@ -31,21 +32,6 @@ def parsely(**kwargs):
     else:
         return slack.response("Sorry, didn't recognize that command!")
     return slack.response("")
-
-def analytics(command_list):
-    pass
-
-def shares(command_list):
-    # TODO
-    pass
-
-def referrers(command_list):
-    # TODO
-    pass
-
-def realtime(command_list):
-    # TODO
-    pass
 
 app.add_url_rule('/', view_func=slack.dispatch)
 

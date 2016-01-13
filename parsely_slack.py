@@ -59,12 +59,15 @@ class ParselySlack(object):
     def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
         # pull default config params
-        self.config = {'days': DAYS, 'limit': LIMIT, 'threshold': 'THRESHOLD'}
+        self.config = {'limit': LIMIT, 'threshold': 'THRESHOLD'}
         self.trended_urls = []
         if THRESHOLD:
-            self.alerts_timer = Timer(20.0, self.alerts_polling, [self.threshold], {})
+            self.alerts_timer = Timer(300.0, self.alerts_polling, [self.config['threshold']], {})
             self.alerts_timer.daemon = True
             self.alerts_timer.start()
+            self.trending_clear_alert = Timer(86400.0, self.trended_urls_clear)
+            self.trending_clear_alert.daemon = True
+            self.trending_clear_alert.start()
     
     def send(self, attachments=None, channel=None, username=None, text='default text'):
         ''' send a dict to slack properly '''
@@ -251,7 +254,6 @@ class ParselySlack(object):
     
     def alerts_polling(self, threshold):
         time_period = string_to_time('5m')
-        print "lerts polling fired!"
         posts = self._client.realtime(aspect='posts', per=time_period, limit=100)
         post_list = []
         for post in posts:
@@ -262,7 +264,7 @@ class ParselySlack(object):
             text = "The posts below might be trending!"
             attachments = self.build_meta_attachments(post_list, text)
             self.send(attachments, text)
-        self.alerts_timer = Timer(300.0, self.alerts_polling, [self.threshold], {})
+        self.alerts_timer = Timer(300.0, self.alerts_polling, [self.config['threshold']], {})
         self.alerts_timer.daemon = True
         self.alerts_timer.start()
         
@@ -270,5 +272,8 @@ class ParselySlack(object):
         # clear trended urls so if they trend again after a couple of days they'll
         # show up again
         self.trended_urls = []
+        self.trended_urls_timer = Timer(86400.0, self.trended_urls_clear)
+        self.trended_urls_timer.daemon = True
+        self.trended_urls_timer.start()
         
         

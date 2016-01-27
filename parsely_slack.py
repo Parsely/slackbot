@@ -68,30 +68,6 @@ class ParselySlack(object):
             self.trending_clear_alert = Timer(86400.0, self.trended_urls_clear)
             self.trending_clear_alert.daemon = True
             self.trending_clear_alert.start()
-    
-    def send(self, attachments=None, channel=None, username=None, text='default text'):
-        ''' send a dict to slack properly '''
-        # use the class objects if they exist
-        slack_channel = channel or "general"
-        slack_username = username or "Parselybot"
-        
-        payload = {
-            'channel': channel, 
-            'username': 'Parselybot', 
-            'text': 'Top 5 posts last 24 hours'}
-            
-        slack_attachments = attachments or self.attachments
-        json_payload = {'payload': payload, 'attachments': slack_attachments}
-
-        # take our json data and send it up
-        try:
-            webhook_url = WEBHOOK_URLS.get(channel)
-            test_output = requests.post(webhook_url, data=json.dumps(json_payload))
-            self.attachments = []
-        except requests.exceptions.MissingSchema:
-            print(
-                'The webhook URL appears to be invalid. '
-                'Are you sure you have the right webhook URL?')
                 
     def build_meta_attachments(self, entries, text):
         ''' takes list of Parsely meta objects and makes slack attachments out of them'''

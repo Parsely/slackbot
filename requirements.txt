@@ -2,7 +2,7 @@ backports-abc==0.4
 backports.ssl-match-hostname==3.4.0.2
 certifi==2015.9.6.2
 Flask==0.10.1
-Flask-Slack==0.1.2
+Flask-Slack==0.1.5
 itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23

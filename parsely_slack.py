@@ -85,7 +85,8 @@ class ParselySlack(object):
 
         # take our json data and send it up
         try:
-            test_output = requests.post(WEBHOOK_URL, data=json.dumps(json_payload))
+            webhook_url = WEBHOOK_URLS.get(channel)
+            test_output = requests.post(webhook_url, data=json.dumps(json_payload))
             self.attachments = []
         except requests.exceptions.MissingSchema:
             print(
@@ -173,6 +174,8 @@ class ParselySlack(object):
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         metas = ["posts", "tags", "sections", "authors"]
         metas_detail = ["tag", "section", "author"]
+        if not commands[0] in metas:
+            return None, None
         if commands[0] == 'referrers':
             parsed['meta'] = commands[0]
             parsed['time'] = commands[1]

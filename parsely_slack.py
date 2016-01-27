@@ -221,15 +221,6 @@ class ParselySlack(object):
             post_num = int(parsed['value'])
             post = [self._client.post_detail(post=self.last_post_list[post_num-1], **kwargs)]
         return post
-        
-    def spark_string(ints, fit_min=False):
-        min_range = 0
-        if fit_min:
-            min_range = min(ints)
-    
-        step_range = max(ints) - min_range
-        step = ((step_range) / float(len(ticks) - 1)) or 1
-        return u''.join(ticks[int(round((i - min_range) / step))] for i in ints)
     
     def alerts_polling(self, threshold):
         time_period = string_to_time('5m')

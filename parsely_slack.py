@@ -32,11 +32,14 @@ def string_to_time(time):
         
     elif time[-1].lower() == 'h':
         time_period.hours = int(time[:-1])
-        time_period.time_str = 'Hours'
+        time_period.time_str = 'Hour' if int(time_period.hours) == 1 else 'Hours'
         res = time_period
             
     elif time[-1].lower() == 'm':
         time_period.minutes = int(time[:-1])
+        if time_period.minutes < 5:
+            # can't do less than 5 minutes, just set to 5
+            time_period.minutes = 5
         time_period.time_str = 'Minutes'
         res = time_period
         
@@ -157,6 +160,11 @@ class ParselySlack(object):
             parsed['time'] = commands[1]
         elif commands[0] in metas:
             # sample command : /parsely, posts, monthtodate
+            if len(commands) == 1:
+                if not parsed.get('time'):
+                # give default of last hour
+                    parsed['time'] = '1h'
+                parsed['meta'] = commands[0].strip()
             if len(commands) == 2:
                 parsed['meta'] = commands[0].strip()
                 parsed['time'] = commands[1].strip()
@@ -164,25 +172,14 @@ class ParselySlack(object):
                 parsed['meta'] = commands[0].strip()
                 parsed['value'] = commands[1].strip()
                 parsed['time'] = commands[2].strip()
-            if parsed['meta'] == 'post':
-                parsed['value'] = commands[1].strip()
         
         else:
             return None, None
-         
-        if not parsed['time']:
-            # give default of last hour
-            parsed['time'] = '1h'
+
         if (parsed['time'][-1].lower() == 'm' or 
                 parsed['time'][-1].lower() == 'h' or 
                 parsed['time'] == 'today'):
             return self.realtime(parsed, **options)
-        options['days'] = string_to_time(parsed['time'])
-        # have days, let's build query
-        if parsed['meta'] == 'post':
-            post = self.post_detail(parsed, **options)
-            text = "Detailed Look"
-            return post, text
         
         post_list = self._client.analytics(aspect=parsed['meta'], **options)
         text = 'Top {} {} in Last {} Days'.format(str(len(post_list)), parsed['meta'], options['days'])
@@ -192,7 +189,6 @@ class ParselySlack(object):
         
     def realtime(self, parsed, **kwargs):
         # takes parsed commands and returns a post_list for realtime
-        # need a little function here we can add attributes to
         time_period = string_to_time(parsed['time'])
         filter_string, time_string = "", ""
         if parsed.get('value'):

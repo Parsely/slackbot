@@ -17,6 +17,8 @@ def parsely(**kwargs):
         post_list, header_text = slackbot.parse(commands)
         if text == None:
             return slack.response("Sorry, didn't recognize that command!")
+        if not post_list:
+            return slack.response("Sorry, no posts found with that query!")
         attachments = slackbot.build_meta_attachments(post_list, header_text)
         return slack.response(text="", response_type="in_channel", attachments=attachments)
     elif 'reports' in commands[0]:
@@ -35,4 +37,4 @@ app.add_url_rule('/', view_func=slack.dispatch)
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', 6000, debug=False)
+    app.run('0.0.0.0', 6000, debug=False, threaded=True)

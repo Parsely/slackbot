@@ -21,14 +21,6 @@ def parsely(**kwargs):
             return slack.response("Sorry, no posts found with that query!")
         attachments = slackbot.build_meta_attachments(post_list, header_text)
         return slack.response(text="", response_type="in_channel", attachments=attachments)
-    elif 'reports' in commands[0]:
-        slackbot.reports.parse(commands)
-    # elif shares:
-    #     slackbot.shares(commands)
-    # elif referrers:
-    #     slackbot.referrers(commands)
-    # elif realtime(commands):
-    #     slackbot.realtime(commands)
     else:
         return slack.response("Sorry, didn't recognize that command!")
     return slack.response("")

@@ -18,14 +18,8 @@ def string_to_time(time):
     # let's compute some sane things from these
     time_period = lambda: None
     time_period.hours = []
-    if time == 'monthtodate':
-        res = dt.now(tzlocal.get_localzone()).day
     
-    elif time == 'weektodate':
-        begin_date = dt.now(tzlocal.get_localzone()).weekday()
-        res = begin_date + 1
-    
-    elif time == 'today':
+    if time == 'today':
         res = dt.now(tzlocal.get_localzone()).hour
         time_period.hours = int(res)
         res = time_period
@@ -62,7 +56,7 @@ class ParselySlack(object):
     def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
         # pull default config params
-        self.config = {'limit': LIMIT, 'threshold': 'THRESHOLD'}
+        self.config = {'limit': LIMIT, 'threshold': THRESHOLD}
         self.trended_urls = []
         if THRESHOLD:
             self.alerts_timer = Timer(300.0, self.alerts_polling, [self.config['threshold']], {})
@@ -176,18 +170,12 @@ class ParselySlack(object):
         else:
             return None, None
 
-        if (parsed['time'][-1].lower() == 'm' or 
-                parsed['time'][-1].lower() == 'h' or 
-                parsed['time'] == 'today'):
-            return self.realtime(parsed, **options)
+        return self.realtime(parsed, **options)
         
-        post_list = self._client.analytics(aspect=parsed['meta'], **options)
-        text = 'Top {} {} in Last {} Days'.format(str(len(post_list)), parsed['meta'], options['days'])
-        if (parsed['meta'] == 'posts'):
-            self.last_post_list = post_list
-        return post_list, text
         
     def realtime(self, parsed, **kwargs):
+        if not kwargs.get('limit'):
+            kwargs['limit'] = self.config.LIMIT
         # takes parsed commands and returns a post_list for realtime
         time_period = string_to_time(parsed['time'])
         filter_string, time_string = "", ""

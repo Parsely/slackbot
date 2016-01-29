@@ -4,12 +4,14 @@ from config import *
 import parsely_slack
 import threading
 import urlparse
+import json
 app = Flask(__name__)
     
 slack = Slack(app)
 slackbot = parsely_slack.ParselySlack(APIKEY, SHARED_SECRET)
 @slack.command('parsely', token=SLACK_TOKEN, team_id=TEAM_ID, methods=['POST']) 
 def parsely(**kwargs):
+    print json.dumps(kwargs)
     text = kwargs.get('text')
     channel = kwargs.get('channel_name')
     commands = [word.strip() for word in text.strip().split(',')]
@@ -20,6 +22,7 @@ def parsely(**kwargs):
         if not post_list:
             return slack.response("Sorry, no posts found with that query!")
         attachments = slackbot.build_meta_attachments(post_list, header_text)
+        print json.dumps(attachments)
         return slack.response(text="", response_type="in_channel", attachments=attachments)
     else:
         return slack.response("Sorry, didn't recognize that command!")

@@ -1,16 +1,14 @@
 from __future__ import unicode_literals
-import requests
 import calendar
 import datetime
+from datetime import datetime as dt
 import json
 import pytz
-import tzlocal
-from datetime import datetime as dt
-from parsely.parsely import Parsely
-import re
 import requests
+import tzlocal
+
+from parsely.parsely import Parsely
 from config import *
-from threading import Timer
 
 
 def string_to_time(time):

@@ -16,7 +16,7 @@ def parsely(**kwargs):
     commands = [word.strip() for word in text.strip().split(',')]
     if 'author' or 'post' or 'section' or 'tag' or 'referrers' in commands[0]:
         post_list, header_text = slackbot.parse(commands)
-        if not text:
+        if not header_text:
             return slack.response("Sorry, didn't recognize that command!")
         if not post_list:
             return slack.response("Sorry, no posts found with that query!")

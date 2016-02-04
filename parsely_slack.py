@@ -17,11 +17,10 @@ def string_to_time(time):
     # turn a string like monthtodate, weektodate, into a time
     # let's compute some sane things from these
     time_period = lambda: None
+    #python-parsely needs hours set, even if it's blank, or it errors out
     time_period.hours = []
-    
     if time == 'today':
-        res = dt.now(tzlocal.get_localzone()).hour
-        time_period.hours = int(res)
+        time_period.hours = int(dt.now(tzlocal.get_localzone()).hour)
         res = time_period
         
     elif time[-1].lower() == 'h':
@@ -49,6 +48,7 @@ def string_to_time(time):
         
     else:
         res = '1'
+    
     return res
         
 class ParselySlack(object):
@@ -56,25 +56,13 @@ class ParselySlack(object):
     def __init__(self, apikey, secret, username=None, password=None):
         self._client = Parsely(apikey, secret=secret)
         # pull default config params
-        self.config = {'limit': LIMIT, 'threshold': THRESHOLD}
-        self.trended_urls = []
-        if THRESHOLD:
-            self.alerts_timer = Timer(300.0, self.alerts_polling, [self.config['threshold']], {})
-            self.alerts_timer.daemon = True
-            self.alerts_timer.start()
-            self.trending_clear_alert = Timer(86400.0, self.trended_urls_clear)
-            self.trending_clear_alert.daemon = True
-            self.trending_clear_alert.start()
+        self.config = {'limit': LIMIT} 
                 
     def build_meta_attachments(self, entries, text):
         ''' takes list of Parsely meta objects and makes slack attachments out of them'''
-        attachments, temp_dict = [], {}
-        intro_text = {'fallback': text, 
-                   'pretext': text}
-        attachments.append(intro_text)
+        attachments = [{'fallback': text, 'pretext': text}]
         for index, entry in enumerate(entries):
-            meta = entry.__class__.__name__
-            if meta == 'Post':
+            if entry.__class__.__name__ == 'Post':
                 attachment = self.build_post_attachment(index, entry)
                 attachments.append(attachment)
             else:
@@ -87,35 +75,33 @@ class ParselySlack(object):
         dash_link = self.get_dash_link(entry.url)
         res_list = [{
                 'value': 'Hits: {}'.format(entry.hits), 
-                'short':'false'
+                'short':'false',
+                'title': 'Author: {}'.format(entry.author)
                 }]
-        res_list[0]['title'] = 'Author: {}'.format(entry.author) 
-        temp_dict = {
-            'fallback': '<{}|{}>'.format(dash_link, 
-            title), 
-            'pretext':'<{}|{}>'.format(dash_link, title)}
+        attachment = {
+            'fallback': '<{}|{}>'.format(dash_link, title), 
+            'pretext':'<{}|{}>'.format(dash_link, title),
+            'thumb_url': entry.thumb_url_medium
+            }
         shares = self._client.shares(post=entry.url)
-        temp_dict['thumb_url'] = entry.thumb_url_medium
-        if shares:
-            shares_dict = {
-                'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
-                    shares.twitter, shares.facebook),
-                    'short': 'true'}
-            res_list.append(shares_dict)
-            if entry.visitors:
-                visitors_dict = {
-                    'title': 'visitors',
-                    'value': '{}'.format(entry.visitors),
-                    'short': 'true'}
-                res_list.append(visitors_dict)
-        temp_dict['fields'] = res_list
-        return temp_dict
+        shares_dict = {
+            'title': 'shares', 'value': 'Twitter: {}, Facebook: {}'.format(
+                shares.twitter, shares.facebook),
+                'short': 'true'}
+        res_list.append(shares_dict)
+        if entry.visitors:
+            visitors_dict = {
+                'title': 'visitors',
+                'value': '{}'.format(entry.visitors),
+                'short': 'true'}
+            res_list.append(visitors_dict)
+        attachment['fields'] = res_list
+        return attachment
             
     def build_meta_attachment(self, index, entry):
         title = str(index+1) + '. ' + entry.name
-        meta = entry.__class__.__name__
         value_url_string = entry.name.replace(' ', '_')
-        meta_url_string = meta + "s"
+        meta_url_string = "{}s".format(entry.__class__.__name__)
         url = 'http://dash.parsely.com/{}/{}/{}/'.format(APIKEY, meta_url_string.lower(), value_url_string)
         fields = [{
                 'value': 'Hits: {}'.format(entry.hits), 
@@ -131,11 +117,11 @@ class ParselySlack(object):
                 url = 'http://dash.parsely.com/{}/{}/{}/{}'.format(APIKEY, meta_url_string.lower(), entry.ref_type, value_url_string)
         except AttributeError:
             pass
-        temp_dict = {
+        attachment = {
             'fallback': '<{}|{}>'.format(url, entry.name), 
             'pretext':'<{}|{}>'.format(url, entry.name)}
-        temp_dict['fields'] = fields
-        return temp_dict
+        attachment['fields'] = fields
+        return attachment
     
     def get_dash_link(self, url):
         ''' gets a dash link for the given URL '''
@@ -164,7 +150,7 @@ class ParselySlack(object):
                 parsed['time'] = commands[1].strip()
             if len(commands) == 3:
                 parsed['meta'] = commands[0].strip()
-                parsed['value'] = commands[1].strip()
+                parsed['value'] = commands[1].strip() if commands[1] in metas_detail else None
                 parsed['time'] = commands[2].strip()
         
         else:
@@ -174,14 +160,11 @@ class ParselySlack(object):
         
         
     def realtime(self, parsed, **kwargs):
-        if not kwargs.get('limit'):
-            kwargs['limit'] = self.config.LIMIT
         # takes parsed commands and returns a post_list for realtime
         time_period = string_to_time(parsed['time'])
         filter_string, time_string = "", ""
         if parsed.get('value'):
-            value_list = [x.strip() for x in parsed['value'].split(':')]
-            filter_meta, value = value_list
+            filter_meta, value = [x.strip() for x in parsed['value'].split(':')]
             kwargs[filter_meta] = value
             filter_string = "For {} {}".format(filter_meta, value)
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, **kwargs)
@@ -197,37 +180,5 @@ class ParselySlack(object):
         return post_list, text
         
         
-    def post_detail(self, parsed, **kwargs):
-        # takes a post and some parsed commands and returns post detail
-        if 'http' in parsed.get('value'):
-            post = [self._client.post_detail(post=parsed['value'], **options)]
-        else:
-            post_num = int(parsed['value'])
-            post = [self._client.post_detail(post=self.last_post_list[post_num-1], **kwargs)]
-        return post
-    
-    def alerts_polling(self, threshold):
-        time_period = string_to_time('5m')
-        posts = self._client.realtime(aspect='posts', per=time_period, limit=100)
-        post_list = []
-        for post in posts:
-            if post.hits >= threshold and post.url not in self.trended_urls:
-                post_list.append(post)
-                self.trended_urls.append(post.url)
-        if post_list:
-            text = "The posts below might be trending!"
-            attachments = self.build_meta_attachments(post_list, text)
-            self.send(attachments, text)
-        self.alerts_timer = Timer(300.0, self.alerts_polling, [self.config['threshold']], {})
-        self.alerts_timer.daemon = True
-        self.alerts_timer.start()
-        
-    def trended_urls_clear(self):
-        # clear trended urls so if they trend again after a couple of days they'll
-        # show up again
-        self.trended_urls = []
-        self.trended_urls_timer = Timer(86400.0, self.trended_urls_clear)
-        self.trended_urls_timer.daemon = True
-        self.trended_urls_timer.start()
         
         

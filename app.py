@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 slack = Slack(app)
 slackbot = parsely_slack.ParselySlack(APIKEY, SHARED_SECRET)
-@slack.command('parsely', token=SLACK_TOKEN, team_id=TEAM_ID, methods=['POST']) 
+@slack.command('parsely', token=SLACK_TOKEN, team_id=TEAM_ID, methods=['POST'])
 def parsely(**kwargs):
     text = kwargs.get('text')
     channel = kwargs.get('channel_name')

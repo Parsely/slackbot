@@ -6,7 +6,7 @@ import threading
 import urlparse
 import json
 app = Flask(__name__)
-    
+
 slack = Slack(app)
 slackbot = parsely_slack.ParselySlack(APIKEY, SHARED_SECRET)
 @slack.command('parsely', token=SLACK_TOKEN, team_id=TEAM_ID, methods=['POST']) 

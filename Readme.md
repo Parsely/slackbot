@@ -6,24 +6,24 @@ API to allow realtime Slackalytics in your Slack instance!
 
 Installation
 ----------------
-1) Head over to the custom integrations section of your Slack team and add a
+1. Head over to the custom integrations section of your Slack team and add a
 "Slash Commands" integration.
-2) In the "command" section, put "/parsely" (without quotes).
-3) in the "URL" field, enter the URL your slackbot will be running on (Make sure
-to specify the port if necessary in the style of http://slackbot.com:6000)
-4) The rest of the fields can be left as their defaults (though feel free to change
-the name and portrait for the bot).
-5) on the server pointed to in #3, clone this repository.
-6) copy "sample.config.py" to "config.py" and replace all the sample values
+2. In the "command" section, put "/parsely" (without quotes..
+3. in the "URL" field, enter the URL your slackbot will be running on (Make sure
+to specify the port if necessary in the style of http://slackbot.com:6000.
+4. The rest of the fields can be left as their defaults (though feel free to change
+the name and portrait for the bot..
+5. on the server pointed to in #3, clone this repository.
+6. copy "sample.config.py" to "config.py" and replace all the sample values
 with values from your Parsely and Slack instances.
-7) install the dependencies needed for the app with:
+7. install the dependencies needed for the app with:
 
 ```
 pip install -r requirements.txt
 
 ```
 
-7) run "python app.py" and your slackbot will be ready to receive commands!
+7. run "python app.py" and your slackbot will be ready to receive commands!
 
 
 Note: The lightweight server shipped with Flask will work for

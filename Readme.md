@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 ```
 
-7. run "python app.py" and your slackbot will be ready to receive commands!
+Then run "python app.py" and your slackbot will be ready to receive commands!
 
 
 Note: The lightweight server shipped with Flask will work for

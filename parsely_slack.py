@@ -120,30 +120,35 @@ class ParselySlack(object):
     def parse(self, commands):
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         parsed = {}
-        if len(commands) < 2:
+        split_commands = commands.strip().split(',')
+        if len(split_commands) < 2:
             return None
-        command, params = commands[0].strip(), [x.strip() for x in commands[1:]]
+        command = split_commands[0]
+        params = [param.strip() for param in split_commands[1:]]
         metas = ["posts", "tags", "sections", "authors", "referrers"]
         metas_detail = ["tag", "section", "author"]
         if not command in metas:
-            return None, None
+            return None
         elif command in metas:
-            # sample command : /parsely, posts, monthtodate
-            if len(commands) == 1:
+            # sample command : /parsely, posts, 10m
+            if len(split_commands) == 1:
                 if not parsed.get('time'):
                 # give default of last hour
                     parsed['time'] = '1h'
                 parsed['meta'] = command.strip()
-            if len(commands) == 2:
+            if len(split_commands) == 2:
                 parsed['meta'] = command.strip()
                 parsed['time'] = params[0].strip()
-            if len(commands) == 3:
+            if len(split_commands) == 3:
                 parsed['meta'] = command.strip()
-                parsed['value'] = params[0].strip() if params[0] in metas_detail else None
-                parsed['time'] = params[0].strip()
+                if params[0].split(':')[0].lower() in metas_detail:
+                    meta_filter = [param.strip() for param in params[0].split(':')]
+                    parsed['filter_meta'] = meta_filter[0].lower()
+                    parsed['value'] = meta_filter[1]
+                parsed['time'] = params[1].strip()
 
         else:
-            return None, None
+            return None
 
         return parsed
 
@@ -152,10 +157,9 @@ class ParselySlack(object):
         # takes parsed commands and returns a post_list for realtime
         time_period = parse_time(parsed['time'])
         filter_string, time_string = "", ""
-        if parsed.get('value'):
-            filter_meta, value = [x.strip() for x in parsed['value'].split(':')]
-            kwargs[filter_meta] = value
-            filter_string = "For %s %s" % (filter_meta, value)
+        if parsed.get('value') and parsed.get('filter_meta'):
+            kwargs[parsed['filter_meta']] = parsed['value']
+            filter_string = "For %s %s" % (parsed['filter_meta'], parsed['value'])
         post_limit = 50 if parsed.get('meta') == 'referrers' else config.LIMIT
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, limit=post_limit, **kwargs)
         if parsed['meta'] == 'referrers':

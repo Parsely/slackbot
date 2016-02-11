@@ -1,11 +1,11 @@
 import unittest
+
+from parsely import parsely, models
 import parsely_slack
 import config
-from parsely import parsely, models
+
 class ParselyTestCase(unittest.TestCase):
-
-
-
+    
     def setUp(self):
 
         config.TEAM_ID = 'T090APE76'

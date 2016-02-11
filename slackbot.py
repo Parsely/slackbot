@@ -2,8 +2,6 @@ from flask import Flask
 import flask_slack
 import config
 import parsely_slack
-import threading
-import urlparse
 import json
 app = Flask(__name__)
 

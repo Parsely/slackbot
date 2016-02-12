@@ -12,6 +12,8 @@ def parsely(text=None, channel=None, **kwargs):
     parsed_commands = slackbot.parse(text)
     if not parsed_commands:
         return slack.response("Sorry, I didn't understand that query! Maybe try /parsely help?")
+    if parsed_commands['meta'] == 'help':
+        return slack.response(slackbot.help())
     post_list, header_text = slackbot.realtime(parsed_commands)
     if not header_text:
         return slack.response("Sorry, didn't recognize that command!")

@@ -120,6 +120,8 @@ class ParselySlack(object):
     def parse(self, commands):
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         parsed = {}
+        if "help" in commands:
+            return {'meta': 'help'}
         split_commands = commands.strip().split(',')
         if len(split_commands) < 2:
             return None
@@ -172,6 +174,37 @@ class ParselySlack(object):
             time_string = "In Last %s %s" % (parsed['time'][:-1], str(time_period.time_str))
         text = "Top %s %s %s %s" % (str(len(post_list)), parsed['meta'], filter_string, time_string)
         return post_list, text
+
+    def help(self):
+        # returns help commands
+        return '''
+Command syntax: /parsely meta, time
+returns top metas for past minutes / hours
+
+possible values for meta: posts, authors, sections, tags, referrers
+possible values for time: a number followed by m for minutes or h for hours (ex. 30m, 12h)
+
+
+example commands:
+
+
+/parsely posts, 10m returns top posts for last 10 minutes
+
+/parsely sections, 1h returns top sections for last hour
+
+/parsely tags, today returns top tags for today
+
+for posts, you can further filter posts by specifying the meta to filter on with
+a colon.
+
+examples:
+
+/parsely posts, section: News, 1h returns top posts in the News section for the past hour
+
+/parsely posts, tag: article, 25m returns top posts with the article tag for the past 25 minutes
+
+please note that the metas are case sensitive and must be written exactly as they appear in the dashboard.
+'''
 
 
 

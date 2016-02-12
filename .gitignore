@@ -1,0 +1,18 @@
+*.egg-info
+*.swp
+*.egg
+build
+*.pyc
+*.un~
+# Testing / code coverage output
+.testvenv/
+pip.log
+cover/
+.coverage
+coverage.xml
+nosetests.xml
+.idea/
+.python-version
+.cache/
+__pycache__
+.eggs

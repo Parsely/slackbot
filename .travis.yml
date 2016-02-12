@@ -3,6 +3,9 @@ python:
   - "2.6"
   - "2.7"
 # command to install dependencies
-install: "pip install -r requirements.txt"
+install:
+  - pip install -r requirements.txt
+  - pip install pytest mock
 # command to run tests
-script: python tests.py
+script:
+  - py.test -v

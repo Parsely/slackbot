@@ -1,13 +1,15 @@
-from flask import Flask
 import flask_slack
-import config
-import parsely_slack
-import json
+from flask import Flask
+
+import parsely_slackbot
+from parsely_slackbot import config
+
 
 app = Flask(__name__)
-
 slack = flask_slack.Slack(app)
-slackbot = parsely_slack.ParselySlack(config.APIKEY, config.SHARED_SECRET)
+slackbot = parsely_slackbot.SlackBot(config.APIKEY, config.SHARED_SECRET)
+
+
 @slack.command('parsely', token=config.SLACK_TOKEN, team_id=config.TEAM_ID, methods=['POST'])
 def parsely(text=None, channel=None, **kwargs):
     parsed_commands = slackbot.parse(text)
@@ -23,10 +25,11 @@ def parsely(text=None, channel=None, **kwargs):
     attachments = slackbot.build_meta_attachments(post_list, header_text)
     return slack.response(text="", response_type="in_channel", attachments=attachments)
 
-app.add_url_rule('/', view_func=slack.dispatch)
 
 def main():
+    app.add_url_rule('/', view_func=slack.dispatch)
     app.run('0.0.0.0', 6000, debug=False, threaded=True)
-    
+
+
 if __name__ == '__main__':
     main()

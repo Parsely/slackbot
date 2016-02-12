@@ -1,14 +1,12 @@
 from __future__ import unicode_literals
-import calendar
-import datetime
-from datetime import datetime as dt
-import json
-import pytz
-import requests
-import tzlocal
 
+from datetime import datetime as dt
+
+import tzlocal
 from parsely import parsely, models
-import config
+
+from parsely_slackbot import config
+
 
 class TimePeriod(object):
     # little time period object to give to realtime client
@@ -17,29 +15,29 @@ class TimePeriod(object):
         self.hours = None
         self.minutes = None
 
-def parse_time(time):
-    ''' takes a string like 1h, 2m, and returns a time_period object '''
-    # let's compute some sane things from these
-    time_period = TimePeriod()
-    if time == 'today':
-        time_period.hours = int(dt.now(tzlocal.get_localzone()).hour)
-        return time_period
+    @classmethod
+    def from_str(cls, time):
+        ''' takes a string like 1h, 2m, and returns a time_period object '''
+        # let's compute some sane things from these
+        time_period = cls()
+        if time == 'today':
+            time_period.hours = int(dt.now(tzlocal.get_localzone()).hour)
+            return time_period
 
-    if time[-1].lower() == 'h' or 'm' and time[:-1].isdigit():
-        qualifier, time = time[-1].lower(), int(time[:-1])
-        if qualifier == 'h':
-            time_period.time_str = 'Hour' if time == 1 else 'Hours'
-            time_period.hours = time
-        if qualifier == 'm':
-            time_period.time_str = 'Minutes'
-            time_period.minutes = time if time >= 5 else 5
-        return time_period
+        if time.lower().endswith(('h', 'm')) and time[:-1].isdigit():
+            qualifier, time = time[-1].lower(), int(time[:-1])
+            if qualifier == 'h':
+                time_period.time_str = 'Hour' if time == 1 else 'Hours'
+                time_period.hours = time
+            if qualifier == 'm':
+                time_period.time_str = 'Minutes'
+                time_period.minutes = time if time >= 5 else 5
+            return time_period
 
-    return None
 
-class ParselySlack(object):
+class SlackBot(object):
 
-    def __init__(self, apikey, secret, username=None, password=None):
+    def __init__(self, apikey, secret):
         self._client = parsely.Parsely(apikey, secret=secret)
         # pull default config params
 
@@ -115,8 +113,6 @@ class ParselySlack(object):
             else:
                 return 'http://dash.parsely.com/%s/%s/%s/%s' % (config.APIKEY, meta_url_string.lower(), entry.ref_type, value_url_string)
 
-
-
     def parse(self, commands):
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         parsed = {}
@@ -154,10 +150,9 @@ class ParselySlack(object):
 
         return parsed
 
-
     def realtime(self, parsed, **kwargs):
         # takes parsed commands and returns a post_list for realtime
-        time_period = parse_time(parsed['time'])
+        time_period = TimePeriod.from_str(parsed['time'])
         filter_string, time_string = "", ""
         if parsed.get('value') and parsed.get('filter_meta'):
             kwargs[parsed['filter_meta']] = parsed['value']

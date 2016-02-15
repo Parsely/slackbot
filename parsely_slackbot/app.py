@@ -37,10 +37,12 @@ def init(config_args):
     app.add_url_rule('/', view_func=slack.dispatch)
     app.run('0.0.0.0', config_args.port, debug=False, threaded=True)
 
-
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Specify config options.')
     parser.add_argument('--config', dest='config', action='store', default='config.yaml')
     parser.add_argument('--port', dest='port', type=int, action='store', default=6000)
     args = parser.parse_args()
     init(args)
+
+if __name__ == '__main__':
+    main()

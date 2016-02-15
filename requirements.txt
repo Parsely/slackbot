@@ -1,3 +1,4 @@
 Flask-Slack>=0.1.5
 -e git+git@github.com:hbbtstar/python-parsely.git#egg=python-parsely
+pyyaml
 tzlocal>=1.2

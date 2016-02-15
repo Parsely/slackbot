@@ -3,18 +3,19 @@ import unittest
 import parsely
 from mock import MagicMock
 
-import parsely_slackbot
+from parsely_slackbot import slackbot
 
 
 class ParselyTestCase(unittest.TestCase):
 
     def setUp(self):
-        config = MagicMock(autospec=True)
-        config.TEAM_ID = 'T090APE76'
-        config.TOKEN = 'DcJRP8Lr9NRcjrQqAFoNQm2K'
-        config.APIKEY = 'elevatedtoday.com'
-        config.SHARED_SECRET = 'CzwEwFqgehL0w4sXDQ2Bbn6a5A1ixenjZlOiBNWz32A'
-        parsely_slackbot.config = config
+        config = {
+            'team_id': 'T090APE76',
+            'slack_token': 'DcJRP8Lr9NRcjrQqAFoNQm2K',
+            'apikey': 'elevatedtoday.com',
+            'shared_secret': 'CzwEwFqgehL0w4sXDQ2Bbn6a5A1ixenjZlOiBNWz32A',
+            'limit': 5
+            }
         self.sample_slack_command = {"text": "posts, 55m",
                                      "command": "/parsely",
                                      "team_id": "T090APE76",
@@ -24,7 +25,7 @@ class ParselyTestCase(unittest.TestCase):
         self.meta_classes = ["Post", "Referrer", "Section", "Tag", "Author"]
         # just for convenience, have lower cased pluraled list of these
         self.metas = [("%ss" % meta).lower() for meta in self.meta_classes]
-        self.slackbot = parsely_slackbot.SlackBot(config.APIKEY, config.SHARED_SECRET)
+        self.slackbot = slackbot.SlackBot(config)
 
     def test_parse(self):
         for meta in self.metas:

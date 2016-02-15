@@ -1,11 +1,44 @@
 from __future__ import unicode_literals
 
 from datetime import datetime as dt
+import os
+import yaml
 
 import tzlocal
 from parsely import parsely, models
 
-from parsely_slackbot import config
+def load_config(config_file):
+    try:
+        with open(config_file, 'r') as yaml_file:
+            return yaml.load(yaml_file)
+    except IOError:
+        return None
+
+def save_config(config_dict=None, config_file=None):
+    if not config_dict and not os.path.exists('config.yaml'):
+        # generate sample config.yaml
+        with open('config.yaml', 'w') as yaml_file:
+            yaml_file.write('''# replace values below with appropriate values as per documentation.
+# Parsely API key and shared secret can be found in the dashboard in "Settings"->"API"
+# Parsely apikey
+apikey: example.com
+
+#parsely shared_secret
+shared_secret: abcdef12345
+
+# slack team id- can find this at https://api.slack.com/methods/team.info/test
+team_id: T12345
+
+# Slack slash commands integration token
+slack_token: abcdef12345
+
+# posts to return for each query
+limit: 5
+
+# if threshold is set, the minimum pageviews in the last 6 minutes to trigger a trending alert
+# threshold: 500
+''')
+
 
 
 class TimePeriod(object):
@@ -37,8 +70,9 @@ class TimePeriod(object):
 
 class SlackBot(object):
 
-    def __init__(self, apikey, secret):
-        self._client = parsely.Parsely(apikey, secret=secret)
+    def __init__(self, config):
+        self.config = config
+        self._client = parsely.Parsely(self.config['apikey'], secret=config['shared_secret'])
         # pull default config params
 
     def build_meta_attachments(self, entries, text):
@@ -100,18 +134,18 @@ class SlackBot(object):
     def get_dash_link(self, entry):
         ''' gets a dash link for the given Parsely model object '''
         if isinstance(entry, models.Post):
-            return "http://dash.parsely.com/%s/find?url=%s" % (config.APIKEY, entry.url)
+            return "http://dash.parsely.com/%s/find?url=%s" % (self.config['apikey'], entry.url)
         else:
             value_url_string = entry.name.replace(' ', '_')
             meta_url_string = "%ss" % (entry.__class__.__name__)
             if not isinstance(entry, models.Referrer):
-                return 'http://dash.parsely.com/%s/%s/%s/' % (config.APIKEY, meta_url_string.lower(), value_url_string)
+                return 'http://dash.parsely.com/%s/%s/%s/' % (self.config['apikey'], meta_url_string.lower(), value_url_string)
             if entry.ref_type == 'direct':
-                return 'http://dash.parsely.com/%s/referrers/' % (config.APIKEY)
+                return 'http://dash.parsely.com/%s/referrers/' % (self.config['apikey'])
             if entry.ref_type == 'self':
-                return 'http://dash.parsely.com/%s/%s/self/%s' % (config.APIKEY, meta_url_string.lower(), value_url_string)
+                return 'http://dash.parsely.com/%s/%s/self/%s' % (self.config['apikey'], meta_url_string.lower(), value_url_string)
             else:
-                return 'http://dash.parsely.com/%s/%s/%s/%s' % (config.APIKEY, meta_url_string.lower(), entry.ref_type, value_url_string)
+                return 'http://dash.parsely.com/%s/%s/%s/%s' % (self.config['apikey'], meta_url_string.lower(), entry.ref_type, value_url_string)
 
     def parse(self, commands):
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
@@ -157,12 +191,12 @@ class SlackBot(object):
         if parsed.get('value') and parsed.get('filter_meta'):
             kwargs[parsed['filter_meta']] = parsed['value']
             filter_string = "For %s %s" % (parsed['filter_meta'], parsed['value'])
-        post_limit = 50 if parsed.get('meta') == 'referrers' else config.LIMIT
+        post_limit = 50 if parsed.get('meta') == 'referrers' else self.config['limit']
         post_list = self._client.realtime(aspect=parsed['meta'], per=time_period, limit=post_limit, **kwargs)
         if parsed['meta'] == 'referrers':
             post_list.sort(key=lambda x: x.hits, reverse=True)
             # for some reason realtime referrers doesn't honor limit
-            post_list = post_list[:config.LIMIT]
+            post_list = post_list[:self.config['limit']]
         if parsed['time'] == 'today':
             time_string = "Today"
         else:

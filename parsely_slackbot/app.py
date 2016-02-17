@@ -3,7 +3,9 @@ import flask_slack
 from flask import Flask
 import sys
 import yaml
+import alerts
 import slackbot
+import threading
 
 def init(config_args):
     app = Flask(__name__)
@@ -16,6 +18,8 @@ def init(config_args):
         Please edit it according to the instructions in it and re-run parsely_slackbot!'''
         sys.exit()
     parsely_bot = slackbot.SlackBot(config)
+    parsely_alerts = alerts.SlackAlert(parsely_bot)
+
 
 
     @slack.command('parsely', token=config['slack_token'], team_id=config['team_id'], methods=['POST'])

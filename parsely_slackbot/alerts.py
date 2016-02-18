@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import datetime as dt
+import slackbot
 '''
 user can set alerts in command line as follows:
 
@@ -25,8 +26,8 @@ class SlackAlert(object):
 
     def find_breaking_posts(self):
         ''' check if any URLs have exceeded pageview threshold '''
-        time_period = lambda: None
-        time_period.hours, time_period.minutes = None, 5
+        time_period = slackbot.TimePeriod()
+        time_period.minutes = 5
         top_posts = self.slackbot._client.realtime(aspect="posts", per=time_period, limit=100)
 
         # find breaking posts we haven't notified about

@@ -41,14 +41,15 @@ class SlackAlert(object):
                     breaking_posts.append(post)
         return breaking_posts
 
+    def run(self):
+        last_check = None
+        while True:
+            if self.slackbot.config.get('threshold') > 0:
+                now = dt.datetime.now()
+                if not last_check or last_check < now - dt.timedelta(seconds=30):
+                    last_check = now
+                    breaking_posts = self.find_breaking_posts()
 
-def main():
-    slack_alert = SlackAlert()
-    last_check = None
-    while True:
-        if slack_alert.slackbot.config.get('threshold') > 0:
-            now = dt.datetime.now()
-            if not last_check or last_check < now - dt.timedelta(seconds=30):
-                last_check = now
-                slack_alert.find_breaking_posts()
+
+
 

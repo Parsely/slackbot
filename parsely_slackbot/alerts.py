@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 import datetime as dt
+import json
+import requests
 import slackbot
 '''
 user can set alerts in command line as follows:
@@ -20,7 +22,22 @@ class SlackAlert(object):
         self.sent_notifications = {}
 
     def send_alert(self, attachments):
-        ''' formats and sends formatted JSON attachments to Slack '''
+        ''' send list of attachments to Slack as an alert '''
+
+        payload = {
+            'channel': '#general',
+            'username': 'Parselybot',
+            'text': 'The following posts have broken the pageview threshold'}
+
+        json_payload = {'payload': payload, 'attachments': attachments}
+
+        try:
+            webhook_url = self.slackbot.config['webhook_url']
+            requests.post(webhook_url, data=json.dumps(json_payload))
+        except (requests.exceptions.MissingSchema, AttributeError):
+            print(
+                'The webhook URL appears to be invalid. '
+                'Are you sure you have the right webhook URL?')
 
     def find_breaking_posts(self):
         ''' check if any URLs have exceeded pageview threshold, if so return breaking posts
@@ -48,7 +65,8 @@ class SlackAlert(object):
                 if not last_check or last_check < now - dt.timedelta(seconds=30):
                     last_check = now
                     breaking_posts, header_text = self.find_breaking_posts()
-                    self.send_alert(breaking_posts,
+                    attachments = self.slackbot.build_meta_attachments(breaking_posts, header_text)
+                    self.send_alert(attachments)
 
 
 

@@ -20,16 +20,15 @@ class SlackAlert(object):
         self.sent_notifications = {}
 
     def send_alert(self, attachments):
-        ''' sends formatted JSON attachments to Slack '''
-        for attachment in attachments:
-            print attachment['url']
+        ''' formats and sends formatted JSON attachments to Slack '''
 
     def find_breaking_posts(self):
-        ''' check if any URLs have exceeded pageview threshold '''
+        ''' check if any URLs have exceeded pageview threshold, if so return breaking posts
+        and header text'''
         time_period = slackbot.TimePeriod()
         time_period.minutes = 5
         top_posts = self.slackbot._client.realtime(aspect="posts", per=time_period, limit=100)
-
+        header_text = "The following posts have broken the pageview threshold"
         # find breaking posts we haven't notified about
         breaking_posts = []
         now = dt.datetime.now()
@@ -39,7 +38,7 @@ class SlackAlert(object):
                if not last_notified or last_notified < now - dt.timedelta(hours=1):
                     self.sent_notifications[post['url']] = now
                     breaking_posts.append(post)
-        return breaking_posts
+        return breaking_posts, header_text
 
     def run(self):
         last_check = None
@@ -48,7 +47,8 @@ class SlackAlert(object):
                 now = dt.datetime.now()
                 if not last_check or last_check < now - dt.timedelta(seconds=30):
                     last_check = now
-                    breaking_posts = self.find_breaking_posts()
+                    breaking_posts, header_text = self.find_breaking_posts()
+                    self.send_alert(breaking_posts,
 
 
 

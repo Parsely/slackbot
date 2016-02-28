@@ -4,6 +4,7 @@ import parsely
 from mock import MagicMock
 
 from parsely_slackbot import slackbot
+from parsely_slackbot import alerts
 
 
 class ParselyTestCase(unittest.TestCase):
@@ -14,7 +15,9 @@ class ParselyTestCase(unittest.TestCase):
             'slack_token': 'DcJRP8Lr9NRcjrQqAFoNQm2K',
             'apikey': 'elevatedtoday.com',
             'shared_secret': 'CzwEwFqgehL0w4sXDQ2Bbn6a5A1ixenjZlOiBNWz32A',
-            'limit': 5
+            'threshold': 1,
+            'limit': 5,
+            'channels': '#general'
             }
         self.sample_slack_command = {"text": "posts, 55m",
                                      "command": "/parsely",
@@ -26,6 +29,7 @@ class ParselyTestCase(unittest.TestCase):
         # just for convenience, have lower cased pluraled list of these
         self.metas = [("%ss" % meta).lower() for meta in self.meta_classes]
         self.slackbot = slackbot.SlackBot(config)
+        self.alerts = alerts.SlackAlert(self.slackbot)
 
     def test_parse(self):
         for meta in self.metas:
@@ -59,6 +63,13 @@ class ParselyTestCase(unittest.TestCase):
         sample_attachment = self.slackbot.build_meta_attachment(1, post_list[0])
         # meta attachment should have only one field, no author data or shares
         assert len(sample_attachment['fields']) == 1
+
+    def test_alerts(self):
+        breaking_posts = self.alerts.find_breaking_posts()
+        # the threshold is 1, so this should always return a post
+        assert isinstance(breaking_posts[0], parsely.models.Post)
+        # also the timestamp of the post should have been logged
+        assert self.alerts.sent_notifications.get(breaking_posts[0].url)
 
 
 

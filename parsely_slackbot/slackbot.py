@@ -81,7 +81,7 @@ class SlackBot(object):
         self._client = parsely.Parsely(self.config['apikey'], secret=config['shared_secret'])
         # pull default config params
 
-    def build_meta_attachments(self, entries, text):
+    def build_meta_attachments(self, entries, text=''):
         ''' takes list of Parsely meta objects and makes slack attachments out of them '''
         attachments = [{'fallback': text, 'pretext': text}]
         for index, entry in enumerate(entries):

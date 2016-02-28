@@ -44,7 +44,6 @@ class SlackAlert(object):
         top_posts = self.slackbot._client.realtime(aspect="posts", per=time_period, limit=100)
         # unlike custom commands, webhook has a text param so header_text should be blank here
         # to avoid headline repetition
-        header_text = ""
         # find breaking posts we haven't notified about
         breaking_posts = []
         now = dt.datetime.now()
@@ -54,7 +53,7 @@ class SlackAlert(object):
                if not last_notified or last_notified < now - dt.timedelta(hours=6):
                     self.sent_notifications[post.url] = now
                     breaking_posts.append(post)
-        return breaking_posts, header_text
+        return breaking_posts
 
     def run(self):
         last_check = None
@@ -63,9 +62,9 @@ class SlackAlert(object):
                 now = dt.datetime.now()
                 if not last_check or last_check < now - dt.timedelta(seconds=30):
                     last_check = now
-                    breaking_posts, header_text = self.find_breaking_posts()
+                    breaking_posts = self.find_breaking_posts()
                     if breaking_posts:
-                        attachments = self.slackbot.build_meta_attachments(breaking_posts, header_text)
+                        attachments = self.slackbot.build_meta_attachments(breaking_posts)
                         for channel in self.slackbot.config['channels']:
                             self.send_alert(attachments, channel)
 

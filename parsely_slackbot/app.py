@@ -18,7 +18,11 @@ def init(config_args):
         Please edit it according to the instructions in it and re-run parsely_slackbot!'''
         sys.exit()
     parsely_bot = slackbot.SlackBot(config)
-    parsely_alerts = alerts.SlackAlert(parsely_bot)
+    parsely_alert = alerts.SlackAlert(parsely_bot)
+    alerts_thread = threading.Thread(target=parsely_alert.run)
+    alerts_thread.daemon = True
+    alerts_thread.start()
+    
 
 
 

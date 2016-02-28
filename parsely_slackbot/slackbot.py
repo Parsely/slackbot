@@ -35,8 +35,14 @@ slack_token: abcdef12345
 # posts to return for each query
 limit: 5
 
-# if threshold is set, the minimum pageviews in the last 6 minutes to trigger a trending alert
-# threshold: 500
+# if threshold is greater than zero and webhook is set,
+# the minimum pageviews in the last 5 minutes to trigger a trending alert
+# to the listed channels
+webhook: https://hooks.slack.com/services/T12345/example12345
+threshold: 0
+# channels:
+# - "#general"
+# - "#example"
 ''')
 
 

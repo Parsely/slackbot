@@ -19,10 +19,11 @@ def init(config_args):
         sys.exit()
     parsely_bot = slackbot.SlackBot(config)
     parsely_alert = alerts.SlackAlert(parsely_bot)
-    alerts_thread = threading.Thread(target=parsely_alert.run)
+    # run this on a timer so that trending alerts don't happen the moment the bot is kicked off
+    alerts_thread = threading.Timer(300.0, parsely_alert.run)
     alerts_thread.daemon = True
     alerts_thread.start()
-    
+
 
 
 

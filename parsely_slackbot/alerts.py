@@ -4,11 +4,7 @@ import json
 import requests
 import slackbot
 '''
-user can set alerts in command line as follows:
-
-threshold: pageviews in last 5 minutes
-
-channel: webhook
+user can set alerts in config file.
 
 if pageview threshold goes above set threshold, notify channel.
 
@@ -34,7 +30,7 @@ class SlackAlert(object):
 
         try:
             webhook_url = self.slackbot.config['webhook_url']
-            print requests.post(webhook_url, headers=headers, json=payload).content
+            requests.post(webhook_url, headers=headers, json=payload)
         except (requests.exceptions.MissingSchema, AttributeError):
             print(
                 'The webhook URL appears to be invalid. '
@@ -46,7 +42,8 @@ class SlackAlert(object):
         time_period = slackbot.TimePeriod()
         time_period.minutes = 5
         top_posts = self.slackbot._client.realtime(aspect="posts", per=time_period, limit=100)
-        # unlike custom commands, webhook has text param so header_text should be blank here
+        # unlike custom commands, webhook has a text param so header_text should be blank here
+        # to avoid headline repetition
         header_text = ""
         # find breaking posts we haven't notified about
         breaking_posts = []
@@ -54,7 +51,7 @@ class SlackAlert(object):
         for post in top_posts:
             if post.hits >= self.slackbot.config['threshold']:
                last_notified = self.sent_notifications.get(post.url)
-               if not last_notified or last_notified < now - dt.timedelta(hours=1):
+               if not last_notified or last_notified < now - dt.timedelta(hours=6):
                     self.sent_notifications[post.url] = now
                     breaking_posts.append(post)
         return breaking_posts, header_text

@@ -156,7 +156,7 @@ class SlackBot(object):
     def parse(self, commands):
         ''' takes command (ex. author, John Flynn, monthtodate) and formats it'''
         parsed = {}
-        if "help" in commands:
+        if "help" in commands or len(commands) == 0:
             return {'meta': 'help'}
         split_commands = commands.strip().split(',')
         if len(split_commands) < 2:

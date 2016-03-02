@@ -6,30 +6,27 @@ API to allow realtime Slackalytics in your Slack instance!
 
 Installation
 ----------------
-1. Head over to the custom integrations section of your Slack team and add a
-"Slash Commands" integration.
+1. Head over to the custom integrations section of your Slack team and add a "Slash Commands" integration.
 2. In the "command" section, put "/parsely" (without quotes..
-3. in the "URL" field, enter the URL your slackbot will be running on (Make sure
-to specify the port if necessary in the style of http://slackbot.com:6000.
-4. The rest of the fields can be left as their defaults (though feel free to change
-the name and portrait for the bot..
-5. on the server pointed to in #3, clone this repository.
-6. copy "sample.config.py" to "config.py" and replace all the sample values
-with values from your Parsely and Slack instances.
-7. install the dependencies needed for the app with:
+3. in the "URL" field, enter the URL your slackbot will be running on (Make sure to specify the port in the style of http://slackbot.com:6000. (The default port is 6000 for the slackbot)
+4. The rest of the fields can be left as their defaults (though feel free to change the name and portrait for the bot)
+5. on the server pointed to in #3, run:
+
 
 ```
-pip install -r requirements.txt
-
+pip install parsely-slackbot
 ```
 
-Then run "python app.py" and your slackbot will be ready to receive commands!
+and then run:
 
 
-Note: The lightweight server shipped with Flask will work for
-small and mid-sized teams. For larger teams, you might want to look into a more
-robust WSGI server like gunicorn in the event that you experience stability
-issues.
+```
+parsely_slackbot
+```
+
+The bot will generate a sample config.yaml for you, which you can then edit as necessary with your own values that you pulled above. 
+
+Note: The lightweight server shipped with Flask has worked quite well in testing for small and mid-sized teams. For larger teams (and as a best practice in general), you might want to look into a more robust WSGI server like gunicorn so as not to experience stability issues.
 
 Usage
 -------
@@ -44,8 +41,7 @@ examples:
 
 /parsely tags, today returns top tags for today
 
-for posts, you can further filter posts by specifying the meta to filter on with
-a colon.
+for posts, you can further filter posts by specifying the meta to filter on with a colon.
 
 examples:
 
@@ -54,4 +50,3 @@ examples:
 /parsely posts, tag: article, 25m returns top posts with the article tag for the past 25 minutes
 
 please note that the metas are case sensitive and must be written exactly as they appear in the dashboard.
-

@@ -6,47 +6,53 @@ API to allow realtime Slackalytics in your Slack instance!
 
 Installation
 ----------------
-1. Head over to the custom integrations section of your Slack team and add a "Slash Commands" integration.
-2. In the "command" section, put "/parsely" (without quotes..
-3. in the "URL" field, enter the URL your slackbot will be running on (Make sure to specify the port in the style of http://slackbot.com:6000. (The default port is 6000 for the slackbot)
-4. The rest of the fields can be left as their defaults (though feel free to change the name and portrait for the bot)
-5. on the server pointed to in #3, run:
 
-
+### Server set up. You'll need to run the slackbot on a server. Run: 
 ```
 pip install parsely-slackbot
 ```
-
 and then run:
-
-
 ```
 parsely_slackbot
 ```
+The bot will generate a sample config.yaml for you. See a .. _sample here:: https://github.com/Parsely/slackbot/blob/master/parsely_slackbot/sample_conf.yaml. Edit with your Site ID and API shared secret for the account you want to show in the channel. You can find these .._here: https://dash.parsely.com/to/settings/api/. You will need the Slack team ID from your channel and the Slack token from the set up below.
 
-The bot will generate a sample config.yaml for you, which you can then edit as necessary with your own values that you pulled above. 
+### Slack Channel Set Up
+1. In your channel settings, select "Customize Slack." Choose "Configure Apps" --> "Custom Integrations"  
+2. Add a "Slash Commands" integration
+3. In the "command" section, enter "/parsely" (without quotes)
+3. In the "URL" field, enter the URL your slackbot will be running on, created in the Server Set Up step. Make sure to specify the port in the style of http://EXAMPLE.com:6000. (The default port is 6000 for the slackbot)
+4. The rest of the fields can be left as their defaults. Though if you would like to upload an image, the Parse.ly logo can be found .. _here: http://www.parsely.com/static/img/parsely-green-leaf-m.png. 
+
 
 Note: The lightweight server shipped with Flask has worked quite well in testing for small and mid-sized teams. For larger teams (and as a best practice in general), you might want to look into a more robust WSGI server like gunicorn so as not to experience stability issues.
 
 Usage
 -------
+### Command syntax:
 /parsely meta, time
 
-examples:
+meta = posts, authors, sections, tags, referrers 
+time = Xm, Yh, today. Max of 24h. 
 
+### Sample commands:
 
-/parsely posts, 10m returns top posts for last 10 minutes
+/parsely posts, 10m 
+Will return the top posts in the last 10 minutes
 
-/parsely sections, 1h returns top sections for last hour
+/parsely sections, 1h 
+Will return the top sections in the last hour
 
-/parsely tags, today returns top tags for today
+/parsely tags, today 
+Will return the top tags for today
 
-for posts, you can further filter posts by specifying the meta to filter on with a colon.
+### Filtering
+For use with "posts" add a colon to filter to a specific author, section, tag or referrer
 
-examples:
+/parsely posts, section: News, 1h 
+Will return top posts in the News section for the past hour
 
-/parsely posts, section: News, 1h returns top posts in the News section for the past hour
+/parsely posts, tag: obama, 25m 
+Will return top posts with the tag "obama" for the past 25 minutes
 
-/parsely posts, tag: article, 25m returns top posts with the article tag for the past 25 minutes
-
-please note that the metas are case sensitive and must be written exactly as they appear in the dashboard.
+Please note that the filters are case sensitive and must be written exactly as they appear in the dashboard.

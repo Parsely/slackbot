@@ -69,6 +69,5 @@ The slackbot has the ability to poll Parsely's realtime data endpoint and automa
 5. under the "channels" list, add every channel you'd like the bot to send alerts to.
 
 save the config.yaml, restart the bot, and you're all set! 
-=======
 
 

@@ -4,7 +4,7 @@ Parsely Slackbot
 Parsely slackbot is an open-source slack custom integration that uses the Parsely
 API to allow realtime Slackalytics in your Slack instance!
 
-Server set up
+Server Set Up
 ----------------
 
 You'll need to run the slackbot on a server. 
@@ -55,16 +55,6 @@ Usage
 | /parsely tags, today 
 | Will return the top tags for today
 | 
-| Filtering
-| For use with "posts" add a colon to filter to a specific author, section, tag or referrer
-| 
-| /parsely posts, section: News, 1h 
-| Will return top posts in the News section for the past hour
-| 
-| /parsely posts, tag: obama, 25m 
-| Will return top posts with the tag "obama" for the past 25 minutes
-| 
-| Please note that the filters are case sensitive and must be written exactly as they appear in the dashboard.
 
 
 Pageview Threshold Notification
@@ -79,3 +69,6 @@ The slackbot has the ability to poll Parsely's realtime data endpoint and automa
 5. under the "channels" list, add every channel you'd like the bot to send alerts to.
 
 save the config.yaml, restart the bot, and you're all set! 
+=======
+
+

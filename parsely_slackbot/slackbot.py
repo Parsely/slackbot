@@ -228,7 +228,7 @@ Will return top sections for last hour
 /parsely tags, today 
 Will return top tags for today
 
-See all example commands: http://www.parsely.com/help/post/4110/parse-ly-slackbot-commands/
+See all example commands: http://bit.ly/parsely_slack
 
 '''
 

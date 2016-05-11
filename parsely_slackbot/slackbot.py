@@ -217,28 +217,19 @@ Command syntax: /parsely meta, time
 returns top metas for past minutes / hours
 
 possible values for meta: posts, authors, sections, tags, referrers
-possible values for time: a number followed by m for minutes or h for hours (ex. 30m, 12h)
+possible values for time: a number followed by m for minutes or h for hours (ex. 30m, 12h). Max time value 24h
 
+/parsely posts, 10m 
+Will return top posts for last 10 minutes
 
-example commands:
+/parsely sections, 1h 
+Will return top sections for last hour
 
+/parsely tags, today 
+Will return top tags for today
 
-/parsely posts, 10m returns top posts for last 10 minutes
+See all example commands: http://www.parsely.com/help/post/4110/parse-ly-slackbot-commands/
 
-/parsely sections, 1h returns top sections for last hour
-
-/parsely tags, today returns top tags for today
-
-for posts, you can further filter posts by specifying the meta to filter on with
-a colon.
-
-examples:
-
-/parsely posts, section: News, 1h returns top posts in the News section for the past hour
-
-/parsely posts, tag: article, 25m returns top posts with the article tag for the past 25 minutes
-
-please note that the metas are case sensitive and must be written exactly as they appear in the dashboard.
 '''
 
 

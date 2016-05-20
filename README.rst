@@ -64,7 +64,7 @@ The slackbot has the ability to poll Parsely's realtime data endpoint and automa
 1. Go to the same custom integrations page as in the steps above.
 2. At that page, click "Add Incoming Webhook". 
 3. Select a channel you want the bot to send to (don't worry about being too choosy- the bot can override this later in its settings) and click "Add Webhook Integration". Once the webhook is created, make sure to copy the webhook url slack gives you. (Not required, though highly encouraged, is to name the integration and give it a new logo- you can use the logo provided above!)
-4. in your config.yaml, change the parameter "webhook" to the webhook URL Slack gave you in the previous step. Also set the "threshold" parameter to the minimum number of pageviews a post must have in the past 5 minutes to trigger the trending alert.
+4. in your config.yaml, change the parameter "webhook_url" to the webhook URL Slack gave you in the previous step. Also set the "threshold" parameter to the minimum number of pageviews a post must have in the past 5 minutes to trigger the trending alert.
 5. under the "channels" list, add every channel you'd like the bot to send alerts to.
 
 save the config.yaml, restart the bot, and you're all set! 

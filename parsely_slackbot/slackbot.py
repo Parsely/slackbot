@@ -38,7 +38,7 @@ limit: 5
 # if threshold is greater than zero and webhook is set,
 # the minimum pageviews in the last 5 minutes to trigger a trending alert
 # to the listed channels
-webhook: https://hooks.slack.com/services/T12345/example12345
+webhook_url: https://hooks.slack.com/services/T12345/example12345
 threshold: 0
 # channels:
 # - "#general"
@@ -219,13 +219,13 @@ returns top metas for past minutes / hours
 possible values for meta: posts, authors, sections, tags, referrers
 possible values for time: a number followed by m for minutes or h for hours (ex. 30m, 12h). Max time value 24h
 
-/parsely posts, 10m 
+/parsely posts, 10m
 Will return top posts for last 10 minutes
 
-/parsely sections, 1h 
+/parsely sections, 1h
 Will return top sections for last hour
 
-/parsely tags, today 
+/parsely tags, today
 Will return top tags for today
 
 See all example commands: http://bit.ly/parsely_slack

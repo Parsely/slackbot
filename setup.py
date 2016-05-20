@@ -33,7 +33,7 @@ install_requires = ['Flask-Slack>=0.1.5',
 
 
 setup(name='parsely-slackbot',
-      version='1.0.1',
+      version='1.0.2',
       author='Parsely, Inc.',
       author_email='support@parsely.com',
       url='https://github.com/Parsely/slackbot',

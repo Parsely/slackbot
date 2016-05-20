@@ -2,3 +2,5 @@ Flask-Slack>=0.1.5
 python-parsely>=1.4.3
 pyyaml
 tzlocal>=1.2
+requests
+tornado

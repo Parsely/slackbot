@@ -27,7 +27,9 @@ tests_require = ['pytest', 'mock']
 setup_requires = ['pytest-runner']
 install_requires = ['Flask-Slack>=0.1.5',
                     'python-parsely',  # >= 1.5
-                    'tzlocal>=1.2']
+                    'tzlocal>=1.2',
+                    'requests',
+                    'tornado']
 
 
 setup(name='parsely-slackbot',

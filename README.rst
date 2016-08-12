@@ -15,14 +15,15 @@ Run:
 pip install parsely-slackbot
 ```
 
-and then run:
+and then, to start the server, run:
 
 ```
 parsely_slackbot
 ```
 
 The bot will generate a sample config.yaml for you. See a `sample here 
-<https://github.com/Parsely/slackbot/blob/master/parsely_slackbot/sample_conf.yaml/>`_. Edit with your Site ID and API shared secret for the account you want to show in the channel. You can find these `here <https://dash.parsely.com/to/settings/api/>`_. You will need the Slack team ID from your channel and the Slack token from the set up below.
+<https://github.com/Parsely/slackbot/blob/master/parsely_slackbot/sample_conf.yaml/>`_. Edit with your Site ID and API shared secret for the account you want to show in the channel. You can find these `here <https://dash.parsely.com/to/settings/api/>`_. You will need the Slack team ID from your channel and the Slack token from the set up below. You should then deploy the app on your own domain or using a service like `Heroku 
+<https://devcenter.heroku.com/start/>`_, saving the deployment URL for use in the Slack setup process described below.
 
 Slack Channel Set Up
 ------------------------

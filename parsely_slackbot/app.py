@@ -17,6 +17,8 @@ def init(config_args):
         we've gone ahead and generated a sample one for you in the current directory.
         Please edit it according to the instructions in it and re-run parsely_slackbot!'''
         sys.exit()
+    # for legacy installs before command could be customized
+    config['slash_command'] = config.get('slash_command', 'parsely')
     parsely_bot = slackbot.SlackBot(config)
     parsely_alert = alerts.SlackAlert(parsely_bot)
     # run this on a timer so that trending alerts don't happen the moment the bot is kicked off

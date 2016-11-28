@@ -30,7 +30,7 @@ Slack Channel Set Up
 
 1. In your channel settings, select "Customize Slack." Choose "Configure Apps" --> "Custom Integrations"  
 2. Add a "Slash Commands" integration
-3. In the "command" section, enter "/parsely" (without quotes)
+3. In the "command" section, enter the `slash_command` value from the config (the default is `parsely`).
 4. In the "URL" field, enter the URL your slackbot will be running on, created in the Server Set Up step. Make sure to specify the port in the style of http://EXAMPLE.com:6000. (The default port is 6000 for the slackbot)
 5. The rest of the fields can be left as their defaults. You can also upload the `Parse.ly logo <http://www.parsely.com/static/img/parsely-green-leaf-m.png>`_. 
 

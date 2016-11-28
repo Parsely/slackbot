@@ -27,7 +27,7 @@ def init(config_args):
 
 
 
-    @slack.command('parsely', token=config['slack_token'], team_id=config['team_id'], methods=['POST'])
+    @slack.command(config['slash_command'], token=config['slack_token'], team_id=config['team_id'], methods=['POST'])
     def parsely(text=None, channel=None, **kwargs):
         parsed_commands = parsely_bot.parse(text)
         if not parsed_commands:

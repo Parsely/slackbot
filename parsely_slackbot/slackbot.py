@@ -32,6 +32,9 @@ team_id: T12345
 # Slack slash commands integration token
 slack_token: abcdef12345
 
+# Slash command name
+slash_command: parsely
+
 # posts to return for each query
 limit: 5
 
@@ -213,24 +216,24 @@ class SlackBot(object):
     def help(self):
         # returns help commands
         return '''
-Command syntax: /parsely meta, time
+Command syntax: /{0} meta, time
 returns top metas for past minutes / hours
 
 possible values for meta: posts, authors, sections, tags, referrers
 possible values for time: a number followed by m for minutes or h for hours (ex. 30m, 12h). Max time value 24h
 
-/parsely posts, 10m
+/{0} posts, 10m
 Will return top posts for last 10 minutes
 
-/parsely sections, 1h
+/{0} sections, 1h
 Will return top sections for last hour
 
-/parsely tags, today
+/{0} tags, today
 Will return top tags for today
 
 See all example commands: http://bit.ly/parsely_slack
 
-'''
+'''.format(self.config['slash_command'])
 
 
 

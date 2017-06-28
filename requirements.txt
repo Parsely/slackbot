@@ -4,3 +4,4 @@ pyyaml
 tzlocal>=1.2
 requests
 tornado
+gunicorn
